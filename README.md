@@ -5,7 +5,7 @@ Fire Rate of Spread Calculator is a code built by MatLab to allow researchers fr
 The main goal is to allow the user to calibrate the used camera for filming the fire spread, by this calibration, it will be possible to measure the real distances from the fire images, so calculating the ROS
 The code has a full GUI (graphical user interface) implemented with it to make it easier to use.
 
-There is a compiled version ready to use [Fire_ROS_web.exe] (Fire_ROS_Calculator/Compiled(windows)/Fire_ROS_web.exe), to use this compiled version you will need to have the MatLab Runtime installed on your computer, however if you don't, the installer will download it from the internet and install it.
+There is a compiled version ready to use [Fire_ROS_web.exe] (https://github.com/AAbouali/Fire_ROS_Calculator/releases/tag/1.0), to use this compiled version you will need to have the MatLab Runtime installed on your computer, however if you don't, the installer will download it from the internet and install it.
 In a case you are using an operation system other than the windows, you will have to compile your own version or you can just run the code from the MatLab directly.
 
 This code was developed in [ADAI|CEIF] (http://www.adai.pt) (Association for the Development of Industrial Aerodynamics | Center of Forest Fire Studies) in University of Coimbra, Portugal. 
