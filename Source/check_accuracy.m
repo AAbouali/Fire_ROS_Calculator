@@ -1,8 +1,18 @@
 function check_accuracy 
 global Xworld Yworld numframes shape XcornersWorld YcornersWorld cornersnum resultsfolder results resultrow  R t cameraParams
-global dist_name DistImage handles time ffpoints fflineeq loudstatuse workpathname work X Y Xcorners Ycorners realt_dist
+global dist_name DistImage handles time ffpoints fflineeq loudstatuse workpathname work X Y Xcorners Ycorners realt_dist appPath
 if loudstatuse==1 
     load([workpathname,work])
+    %%%
+    %if loading a session made by version 1.0 or 1.1
+    %load([workpathname,work],'XcornersWorld', 'YcornersWorld', 'ffpoints', 'fflineeq', 'time', 'R', 't', 'cameraParams', 'Xworld', 'Yworld', 'X', 'Y',...
+    %    'numframes', 'Xcorners', 'Ycorners', 'shape')
+    %Xnew=cell(1,numframes); Ynew=cell(1,numframes); Xworldnew=cell(1,numframes); Yworldnew=cell(1,numframes); eqnew=cell(1,numframes);
+    %for i=1:numframes
+    %    Xnew{i}=X(:,i); Ynew{i}=Y(:,i); Xworldnew{i}=Xworld(:,i); Yworldnew{i}=Yworld(:,i); eqnew{i}(:,1:2)=fflineeq(:,2*i-1:2*i);
+    %end
+    %X=Xnew; Y=Ynew; Xworld=Xworldnew; Yworld=Yworldnew; fflineeq=eqnew;
+    %%%%
 end
 %% buildign GUI
 f = figure('Visible','off','Position',[680,266,850,420]);
@@ -31,7 +41,7 @@ f.Visible = 'on';
 
 warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
 jframe=get(f,'javaframe');
-jIcon=javax.swing.ImageIcon('icon ROS.gif');
+jIcon=javax.swing.ImageIcon(fullfile(appPath,'icon ROS.gif'));
 jframe.setFigureIcon(jIcon);
 
 %% interactiv controls
@@ -54,15 +64,15 @@ jframe.setFigureIcon(jIcon);
         hbuttonCalculate.Enable='on';
     end
     function drawLines(source,callbackdata)
-        global hline
+        global hline1
         switch source.Label
             case 'Add Lines'
-                hline = imline(haxis);
+                hline1 = imline(haxis);
         end
     end
     function calculate_Callback(src,event)
-        global hline
-        posline = getPosition(hline);
+        global hline1
+        posline = getPosition(hline1);
         Worldposline = pointsToWorld(cameraParams, R, t, posline);
         MeasuredDist = ((Worldposline(1,1) - Worldposline(2,1)) ^ 2 + (Worldposline(1,2) - Worldposline(2,2)) ^ 2) ^ 0.5;
         Error= abs((realt_dist-MeasuredDist)/realt_dist*100); 

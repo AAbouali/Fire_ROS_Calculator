@@ -1,6 +1,6 @@
 function measuring_dist
 global Xworld Yworld numframes shape XcornersWorld YcornersWorld cornersnum resultsfolder results resultrow  R t cameraParams
-global dist_name DistImage handles time ffpoints fflineeq loudstatuse workpathname work X Y Xcorners Ycorners
+global dist_name DistImage handles time ffpoints fflineeq loudstatuse workpathname work X Y Xcorners Ycorners appPath
 if loudstatuse==1
     load([workpathname,work])
 end
@@ -32,7 +32,7 @@ handles.frameLines = zeros(cornersnum,1);
 handles.frontLines = zeros(numframes,1);
 hold on
 for i=1:numframes
-    handles.frontLines(i)=line(Xworld(:,i),(Yworld(:,i)),'Color','r');
+    handles.frontLines(i)=line(Xworld{i},(Yworld{i}),'Color','r');
 end
 if shape~=4
     for i=1:cornersnum
@@ -50,7 +50,7 @@ f.Visible = 'on';
 
 warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
 jframe=get(f,'javaframe');
-jIcon=javax.swing.ImageIcon('icon ROS.gif');
+jIcon=javax.swing.ImageIcon(fullfile(appPath,'icon ROS.gif'));
 jframe.setFigureIcon(jIcon);
 %% interactive controls
 numdis=1;
@@ -65,7 +65,7 @@ image_source=1;
             axis equal
             hold on
             for i=1:numframes
-                handles.frontLines(i)=line(Xworld(:,i),(Yworld(:,i)),'Color','r');
+                handles.frontLines(i)=line(Xworld{i},(Yworld{i}),'Color','r');
             end
             if shape~=4
                 for i=1:cornersnum

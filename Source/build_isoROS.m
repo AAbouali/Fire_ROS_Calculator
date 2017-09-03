@@ -1,5 +1,5 @@
 function build_isoROS
-global numframes cornersnum Xworld Yworld XcornersWorld YcornersWorld shape results resultrow resultsfolder time
+global numframes cornersnum Xworld Yworld XcornersWorld YcornersWorld shape results resultrow resultsfolder time appPath
 global R t cameraParams ffpoints fflineeq posline nolines handles levels ROSiso Xiso Yiso ReshapeROSiso linelocalRofS newView
 global workpathname work X Y Xcorners Ycorners loudstatuse
 if loudstatuse==1
@@ -65,14 +65,14 @@ m1 = uimenu(c,'Label','Add Lines','Callback',@drawLines);
 % drawing the propagation map on the axis
 hold on
 for i=1:numframes
-    line(haxisROS,Xworld(:,i),(Yworld(:,i)),'Color','r')
+    line(haxisROS,Xworld{i},(Yworld{i}),'Color','r')
 end
 if shape~=4
     for i=1:cornersnum
         line(haxisROS,[XcornersWorld(i,1),XcornersWorld(i+1,1)],([YcornersWorld(i,1),YcornersWorld(i+1,1)]),'Color','b','LineWidth',2)
     end
 end
-f.Name = 'Present Fire ROS as iso-surface';
+f.Name = 'Present ROS''s as iso-surface';
 movegui(f,'center')
 f.MenuBar = 'none';
 f.ToolBar = 'none';
@@ -81,7 +81,7 @@ f.Visible = 'on';
 
 warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
 jframe=get(f,'javaframe');
-jIcon=javax.swing.ImageIcon('icon ROS.gif');
+jIcon=javax.swing.ImageIcon(fullfile(appPath,'icon ROS.gif'));
 jframe.setFigureIcon(jIcon);
 
 colorSelection=1;
@@ -108,8 +108,7 @@ Xiso=[];Yiso=[];ROSiso=[];
     end
 % calculating the ROS and saving the result
     function add_Callback(src,event)
-        set(f, 'pointer', 'watch')
-        drawnow;
+        set(f, 'pointer', 'watch');drawnow;
         posline=cell(1,nolines);
         for i=1:nolines
             posline{1,i} = getPosition(handles.line{i});
@@ -136,56 +135,69 @@ Xiso=[];Yiso=[];ROSiso=[];
         p2= worldToPoints(cameraParams, R, t, [posline{1,j}(2,1),posline{1,j}(2,2)]);
             eqline=polyfit([posline{1,j}(1,1) posline{1,j}(2,1)],[posline{1,j}(1,2) posline{1,j}(2,2)],1);
             for i=Fframe:Lframe
-                for k=1:ffpoints-1
-                    line_x_intersect(j,i-Fframe+1) = fzero(@(x) polyval(eqline-fflineeq(k,[(2*i-1),2*i]),x),0);
-                    line_y_intersect(j,i-Fframe+1) = polyval(fflineeq(k,[(2*i-1),2*i]),line_x_intersect(j,i-Fframe+1));
-                    if ((( line_x_intersect(1,i-Fframe+1)>=Xworld(k,i) && line_x_intersect(j,i-Fframe+1)<=Xworld(k+1,i) && line_y_intersect(j,i-Fframe+1)>=Yworld(k,i) && line_y_intersect(j,i-Fframe+1)<=Yworld(k+1,i))||...
-                            (line_x_intersect(j,i-Fframe+1)<=Xworld(k,i) && line_x_intersect(j,i-Fframe+1)>=Xworld(k+1,i) && line_y_intersect(j,i-Fframe+1)<=Yworld(k,i) && line_y_intersect(j,i-Fframe+1)>=Yworld(k+1,i))||...
-                            (line_x_intersect(j,i-Fframe+1)<=Xworld(k,i) && line_x_intersect(j,i-Fframe+1)>=Xworld(k+1,i) && line_y_intersect(j,i-Fframe+1)>=Yworld(k,i) && line_y_intersect(j,i-Fframe+1)<=Yworld(k+1,i))||...
-                            (line_x_intersect(j,i-Fframe+1)>=Xworld(k,i) && line_x_intersect(j,i-Fframe+1)<=Xworld(k+1,i) && line_y_intersect(j,i-Fframe+1)<=Yworld(k,i) && line_y_intersect(j,i-Fframe+1)>=Yworld(k+1,i))))&&...
+                for k=1:size(Xworld{i},1)-1
+                    line_x_intersect(j,i-Fframe+1) = fzero(@(x) polyval(eqline-fflineeq{i}(k,:),x),0);
+                    line_y_intersect(j,i-Fframe+1) = polyval(fflineeq{i}(k,:),line_x_intersect(j,i-Fframe+1));
+                    if ((( line_x_intersect(1,i-Fframe+1)>=Xworld{i}(k,1) && line_x_intersect(j,i-Fframe+1)<=Xworld{i}(k+1,1) && line_y_intersect(j,i-Fframe+1)>=Yworld{i}(k,1) && line_y_intersect(j,i-Fframe+1)<=Yworld{i}(k+1,1))||...
+                            (line_x_intersect(j,i-Fframe+1)<=Xworld{i}(k,1) && line_x_intersect(j,i-Fframe+1)>=Xworld{i}(k+1,1) && line_y_intersect(j,i-Fframe+1)<=Yworld{i}(k,1) && line_y_intersect(j,i-Fframe+1)>=Yworld{i}(k+1,1))||...
+                            (line_x_intersect(j,i-Fframe+1)<=Xworld{i}(k,1) && line_x_intersect(j,i-Fframe+1)>=Xworld{i}(k+1,1) && line_y_intersect(j,i-Fframe+1)>=Yworld{i}(k,1) && line_y_intersect(j,i-Fframe+1)<=Yworld{i}(k+1,1))||...
+                            (line_x_intersect(j,i-Fframe+1)>=Xworld{i}(k,1) && line_x_intersect(j,i-Fframe+1)<=Xworld{i}(k+1,1) && line_y_intersect(j,i-Fframe+1)<=Yworld{i}(k,1) && line_y_intersect(j,i-Fframe+1)>=Yworld{i}(k+1,1))))&&...
                             ((line_x_intersect(j,i-Fframe+1)>=posline{1,j}(1,1) && line_x_intersect(j,i-Fframe+1)<=posline{1,j}(2,1))||(line_x_intersect(j,i-Fframe+1)<=posline{1,j}(1,1) && line_x_intersect(j,i-Fframe+1)>=posline{1,j}(2,1)))
-                        
+                        no_inter=0;
                         break
+                    else
+                        no_inter=1;
                     end
+                end
+                if no_inter==1;
+                    break
                 end
             end
             %calculating the distance and RofS
-            for i=1:totframes-1
-                Dist(j,i+1) = ((line_x_intersect(j,i) - line_x_intersect(j,(i+1))) ^ 2 + (line_y_intersect(j,i) - line_y_intersect(j,(i+1))) ^ 2) ^ 0.5;
-            end
-            Dist(j,1)=0; %consider the first frame as the 0 refrance 
-            Distadd(j,1)=Dist(j,1);
-            for i=2:totframes
-                Distadd(j,i)=Distadd(j,i-1)+Dist(j,i);
-            end
-            for i=1:totframes-1
-                linelocalRofS(j,i)=(Distadd(j,i+1)-Distadd(j,i))/(linetime(1,i+1)-linetime(1,i));
+            if no_inter==0
+                for i=1:totframes-1
+                    Dist(j,i+1) = ((line_x_intersect(j,i) - line_x_intersect(j,(i+1))) ^ 2 + (line_y_intersect(j,i) - line_y_intersect(j,(i+1))) ^ 2) ^ 0.5;
+                end
+                Dist(j,1)=0; %consider the first frame as the 0 refrance
+                Distadd(j,1)=Dist(j,1);
+                for i=2:totframes
+                    Distadd(j,i)=Distadd(j,i-1)+Dist(j,i);
+                end
+                for i=1:totframes-1
+                    linelocalRofS(j,i)=(Distadd(j,i+1)-Distadd(j,i))/(linetime(1,i+1)-linetime(1,i));
+                end
+            else
+                break
             end
         end
         %reshaping the matrises of the intersection between the line and
         %the fire fornt and the dynamic ROS to prepare them for plotting
         %the iso surface
-        LastIsoRow=size(Xiso,1);
-        ReshapeXiso=zeros(1,size(line_x_intersect,2)-1);
-        ReshapeYiso=zeros(1,size(line_y_intersect,2)-1);
-        for j=1:nolines
-            for i=1:(size(line_x_intersect,2)-1)
-                ReshapeXiso(j,i)=(line_x_intersect(j,i)+line_x_intersect(j,i+1))/2; %the location of the ROS will be in the middle between the two points
+        if no_inter==0
+            LastIsoRow=size(Xiso,1);
+            ReshapeXiso=zeros(1,size(line_x_intersect,2)-1);
+            ReshapeYiso=zeros(1,size(line_y_intersect,2)-1);
+            for j=1:nolines
+                for i=1:(size(line_x_intersect,2)-1)
+                    ReshapeXiso(j,i)=(line_x_intersect(j,i)+line_x_intersect(j,i+1))/2; %the location of the ROS will be in the middle between the two points
+                end
             end
-        end
-        ReshapeXiso=reshape(ReshapeXiso,[numel(ReshapeXiso),1]);
-        Xiso(LastIsoRow+1:LastIsoRow+size(ReshapeXiso,1),1)=ReshapeXiso;
-        for j=1:nolines
-            for i=1:(size(line_y_intersect,2)-1)
-                ReshapeYiso(j,i)=(line_y_intersect(j,i)+line_y_intersect(j,i+1))/2;
+            ReshapeXiso=reshape(ReshapeXiso,[numel(ReshapeXiso),1]);
+            Xiso(LastIsoRow+1:LastIsoRow+size(ReshapeXiso,1),1)=ReshapeXiso;
+            for j=1:nolines
+                for i=1:(size(line_y_intersect,2)-1)
+                    ReshapeYiso(j,i)=(line_y_intersect(j,i)+line_y_intersect(j,i+1))/2;
+                end
             end
+            ReshapeYiso=reshape(ReshapeYiso,[numel(ReshapeYiso),1]);
+            Yiso(LastIsoRow+1:LastIsoRow+size(ReshapeYiso,1),1)=ReshapeYiso;
+            ReshapeROSiso=reshape(linelocalRofS,[numel(linelocalRofS),1]);
+            ROSiso((LastIsoRow+1):LastIsoRow+size(ReshapeROSiso,1),1)=ReshapeROSiso;
+            hbuttonBuild.Enable='on';
+        else
+            hW = warndlg(sprintf('One of the placed lines is not intersecting with the fire front lines \n Tip: Change lines locations and check the considered frames range'),'Error!','modal');
         end
-        ReshapeYiso=reshape(ReshapeYiso,[numel(ReshapeYiso),1]);
-        Yiso(LastIsoRow+1:LastIsoRow+size(ReshapeYiso,1),1)=ReshapeYiso;
-        ReshapeROSiso=reshape(linelocalRofS,[numel(linelocalRofS),1]);
-        ROSiso((LastIsoRow+1):LastIsoRow+size(ReshapeROSiso,1),1)=ReshapeROSiso;
-        hbuttonBuild.Enable='on';
-        set(f, 'pointer', 'arrow')
+        set(f, 'pointer', 'arrow');drawnow;
     end
 
     function reset_Callback(src,event)
@@ -199,7 +211,7 @@ Xiso=[];Yiso=[];ROSiso=[];
         heditAzimuth.String='-37.5';heditElev.String='30';
         hold on
         for i=1:numframes
-            line(haxisROS,Xworld(:,i),(Yworld(:,i)),'Color','r')
+            line(haxisROS,Xworld{i},(Yworld{i}),'Color','r')
         end
         if shape~=4
             for i=1:cornersnum
@@ -216,8 +228,13 @@ Xiso=[];Yiso=[];ROSiso=[];
     function build_Callback(src,event)
         % Build the iso-surface form the ROS values and their locations X,Y
         F = scatteredInterpolant(Xiso,Yiso,ROSiso);
-        tix = min(Xworld(:)):10:max(Xworld(:));
-        tiy = min(Yworld(:)):10:max(Yworld(:));
+        MinMax=zeros(4,numframes);
+        for k=1:numframes
+            MinMax(1,k)=min(Xworld{k});MinMax(2,k)=max(Xworld{k});
+            MinMax(3,k)=min(Yworld{k});MinMax(4,k)=max(Yworld{k});
+        end
+        tix = min(MinMax(1,:)):10:max(MinMax(2,:));
+        tiy = min(MinMax(3,:)):10:max(MinMax(4,:));
         [xq,yq] = meshgrid(tix,tiy);
         vq = F(xq,yq);
         surf(haxisIso,xq,yq,vq);
@@ -272,12 +289,15 @@ Xiso=[];Yiso=[];ROSiso=[];
     end
 
     function checkFront_Callback(src,event)
-        Zworld(1:size(Xworld,1),1:size(Xworld,2))=(max(ROSiso(:))+0.099*max(ROSiso(:)));
+        Zworld=cell(1,numframes);
+        for k=1:numframes
+            Zworld{k}(1:size(Xworld{k},1),1)=(max(ROSiso(:))+0.099*max(ROSiso(:)));
+        end
         Status = get(hcheckFront, 'Value');
         if Status==1;
             hold on
             for i=1:numframes
-                line(haxisIso,Xworld(:,i),Yworld(:,i),Zworld(:,i),'Color',[0 0 0]);
+                line(haxisIso,Xworld{i},Yworld{i},Zworld{i},'Color',[0 0 0]);
             end
         else
              cla(haxisIso)

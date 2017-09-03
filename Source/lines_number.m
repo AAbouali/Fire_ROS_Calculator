@@ -1,5 +1,5 @@
 function lines_number
-global nolines fig
+global nolines fig appPath
 x=1;
 fig = figure('Visible','off','Position',[600,400,250,60]);
 hokay    = uicontrol(fig,'Style','pushbutton','FontSize',13,...
@@ -8,6 +8,7 @@ htext2  = uicontrol(fig,'Style','text','String','Number of Lines to Draw:',...
     'FontSize',13,'Position',[5,60,200,30]);
 htext  = uicontrol(fig,'Style','edit','Position',[200,65,40,25],'FontSize',13);
 fig.Name = 'Number of lines';
+jframe=get(fig,'javaframe'); jframe.setFigureIcon(javax.swing.ImageIcon(fullfile(appPath,'icon ROS.gif')));
 movegui(fig,'center')
 fig.MenuBar = 'none';
 fig.ToolBar = 'none';

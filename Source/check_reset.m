@@ -1,5 +1,5 @@
 function check_reset
-global resetF answer_reset
+global resetF answer_reset appPath
 resetF = figure('Visible','off','Position',[600,400,300,60]);
 htext1  = uicontrol('Style','text','String','Are you sure you want to Reset?',...
     'FontSize',11,'Position',[5,60,290,30]);
@@ -17,7 +17,7 @@ resetF.Visible = 'on';
 
 warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
 jframe=get(resetF,'javaframe');
-jIcon=javax.swing.ImageIcon('icon ROS.gif');
+jIcon=javax.swing.ImageIcon(fullfile(appPath,'icon ROS.gif'));
 jframe.setFigureIcon(jIcon);
 
     function Exit_Callback(src,event)
