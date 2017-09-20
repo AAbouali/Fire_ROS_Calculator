@@ -1,5 +1,9 @@
 # Fire_ROS_Calculator
 
+[![DOI](https://zenodo.org/badge/84100448.svg)](https://zenodo.org/badge/latestdoi/84100448)
+
+<a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-nd/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-nd/4.0/">Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License</a>.
+
 Fire Rate of Spread Calculator is a program built using MatLab to help the researchers from wildfire research area to measure the rate of spread (ROS) of a fire propagating over a surface in a laboratory setting.
 
 The main objective is to calibrate the used camera for filming the fire spread in a way that it would be possible to measure the real distances from the fire images, therefor calculating the ROS. 
