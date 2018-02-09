@@ -229,7 +229,7 @@ hbuttonExt  = uicontrol(hpanelExtract,'Style','pushbutton','String','Extract','F
     'Position',[290,150,200,50],'callback',{@buttonExt_Callback});
 
 %the calibration tab 
-hpanelEvaluate=uipanel(htabEvaluate,'Units','pixels','Title','Evaluate camera calibration','FontSize',10,'Position',[0,0,800,595]);
+hpanelEvaluate=uipanel(htabEvaluate,'Units','pixels','Title','Creat or evaluate a camera calibration','FontSize',10,'Position',[0,0,800,595]);
 htextAdd  = uicontrol(hpanelEvaluate,'Style','text','String','Calibration Images:',...
     'FontSize',11,'Position',[18,530,160,24]);
 heditAdd  = uicontrol(hpanelEvaluate,'Style','edit','Position',[175,530,160,25],'FontSize',10);
