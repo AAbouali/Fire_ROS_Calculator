@@ -204,7 +204,7 @@ PFframe=0;PLframe=0;lineError=0;
                     for i=1:localTotframes-1
                         Dist(j,i+1) = ((line_x_intersect(j,i) - line_x_intersect(j,(i+1))) ^ 2 + (line_y_intersect(j,i) - line_y_intersect(j,(i+1))) ^ 2) ^ 0.5;
                     end
-                    Dist(j,1)=0; %consider the first frame as the 0 refrance
+                    Dist(j,1)=0; %consider the first frame as the 0 referance
                     Distadd(j,1)=Dist(j,1);
                     for i=2:localTotframes
                         Distadd(j,i)=Distadd(j,i-1)+Dist(j,i);

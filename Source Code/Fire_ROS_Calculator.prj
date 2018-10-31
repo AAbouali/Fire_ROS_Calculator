@@ -1,0 +1,167 @@
+<deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
+  <configuration build-checksum="3899912781" file="C:\Program Files\MATLAB\R2018a\bin\ROS\Fire_ROS_Calculator.prj" location="C:\Program Files\MATLAB\R2018a\bin\ROS" name="Fire_ROS_Calculator" preferred-package-location="C:\Program Files\MATLAB\R2018a\bin\ROS\Fire_ROS_Calculator\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+    <param.appname>Fire_ROS_Calculator</param.appname>
+    <param.icon>${PROJECT_ROOT}\Fire_ROS_Calculator_resources\icon.ico</param.icon>
+    <param.icons>
+      <file>${PROJECT_ROOT}\Fire_ROS_Calculator_resources\icon_48.png</file>
+      <file>${PROJECT_ROOT}\Fire_ROS_Calculator_resources\icon_32.png</file>
+      <file>${PROJECT_ROOT}\Fire_ROS_Calculator_resources\icon_24.png</file>
+      <file>${PROJECT_ROOT}\Fire_ROS_Calculator_resources\icon_16.png</file>
+    </param.icons>
+    <param.version>2.1</param.version>
+    <param.authnamewatermark>Abdelrahman Abouali</param.authnamewatermark>
+    <param.email>abouali@adai.pt</param.email>
+    <param.company>ADAI-CEIF</param.company>
+    <param.summary>Fire ROS Calculator is a softwere for forest fire researchers to calculate the ROS of a fire propagation in a laboratory setting</param.summary>
+    <param.description>This program will enable you to calibrate the camera that was used to film the fire propagation, detect the fire front and calculate the rate of spread (ROS) of that fire. The program gives a wide variety of ouputs that can give its user a better understanding of the fire behavior.
+
+This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</param.description>
+    <param.screenshot>${PROJECT_ROOT}\splash.png</param.screenshot>
+    <param.guid />
+    <param.installpath.string>\ADAI-CEIF\</param.installpath.string>
+    <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
+    <param.logo>${PROJECT_ROOT}\side.png</param.logo>
+    <param.install.notes />
+    <param.target.install.notes />
+    <param.intermediate>${PROJECT_ROOT}\Fire_ROS_Calculator\for_testing</param.intermediate>
+    <param.files.only>${PROJECT_ROOT}\Fire_ROS_Calculator\for_redistribution_files_only</param.files.only>
+    <param.output>${PROJECT_ROOT}\Fire_ROS_Calculator\for_redistribution</param.output>
+    <param.logdir>${PROJECT_ROOT}\Fire_ROS_Calculator</param.logdir>
+    <param.enable.clean.build>false</param.enable.clean.build>
+    <param.user.defined.mcr.options />
+    <param.target.type>subtarget.standalone</param.target.type>
+    <param.support.packages />
+    <param.web.mcr>true</param.web.mcr>
+    <param.package.mcr>false</param.package.mcr>
+    <param.no.mcr>false</param.no.mcr>
+    <param.web.mcr.name>Fire_ROS_Calculator_web_v2.1</param.web.mcr.name>
+    <param.package.mcr.name>Fire_ROS_Calculator_inc2_1</param.package.mcr.name>
+    <param.no.mcr.name>MyAppInstaller_app</param.no.mcr.name>
+    <param.windows.command.prompt>true</param.windows.command.prompt>
+    <param.create.log>true</param.create.log>
+    <param.log.file>Fire_ROS_LogFile</param.log.file>
+    <param.native.matlab>false</param.native.matlab>
+    <param.checkbox>false</param.checkbox>
+    <param.example />
+    <param.help.text />
+    <unset>
+      <param.guid />
+      <param.installpath.combo />
+      <param.install.notes />
+      <param.target.install.notes />
+      <param.intermediate />
+      <param.files.only />
+      <param.output />
+      <param.logdir />
+      <param.enable.clean.build />
+      <param.user.defined.mcr.options />
+      <param.target.type />
+      <param.support.packages />
+      <param.web.mcr />
+      <param.package.mcr />
+      <param.no.mcr />
+      <param.no.mcr.name />
+      <param.windows.command.prompt />
+      <param.native.matlab />
+      <param.checkbox />
+      <param.example />
+      <param.help.text />
+    </unset>
+    <fileset.main>
+      <file>${PROJECT_ROOT}\Fire_ROS_Calculator.m</file>
+    </fileset.main>
+    <fileset.resources>
+      <file>${PROJECT_ROOT}\calibrations</file>
+      <file>${PROJECT_ROOT}\icon ROS.gif</file>
+      <file>${PROJECT_ROOT}\plotcolorsmat.mat</file>
+    </fileset.resources>
+    <fileset.package>
+      <file>${PROJECT_ROOT}\calibrations</file>
+      <file>${PROJECT_ROOT}\icon ROS.gif</file>
+    </fileset.package>
+    <fileset.depfun>
+      <file>${PROJECT_ROOT}\auto_detect.m</file>
+      <file>${PROJECT_ROOT}\average_ROS.m</file>
+      <file>${PROJECT_ROOT}\build_isoROS.m</file>
+      <file>${PROJECT_ROOT}\build_prop_map.m</file>
+      <file>${PROJECT_ROOT}\check_accuracy.m</file>
+      <file>${PROJECT_ROOT}\check_accuracy2.m</file>
+      <file>${PROJECT_ROOT}\check_exit.m</file>
+      <file>${PROJECT_ROOT}\check_frame.m</file>
+      <file>${PROJECT_ROOT}\check_reset.m</file>
+      <file>${PROJECT_ROOT}\draw_frame.m</file>
+      <file>${PROJECT_ROOT}\dynamic_ROS.m</file>
+      <file>${PROJECT_ROOT}\enter_time_lap.m</file>
+      <file>${PROJECT_ROOT}\evaluate_frames.m</file>
+      <file>${PROJECT_ROOT}\lines_number.m</file>
+      <file>${PROJECT_ROOT}\main_calibration.m</file>
+      <file>${PROJECT_ROOT}\man_detect.m</file>
+      <file>${PROJECT_ROOT}\measuring_dist.m</file>
+      <file>${PROJECT_ROOT}\repeat_selection.m</file>
+      <file>${PROJECT_ROOT}\saveFrames.m</file>
+      <file>${PROJECT_ROOT}\worldToPoints.m</file>
+    </fileset.depfun>
+    <build-deliverables>
+      <file location="${PROJECT_ROOT}\Fire_ROS_Calculator\for_testing" name="splash.png" optional="false">C:\Program Files\MATLAB\R2018a\bin\ROS\Fire_ROS_Calculator\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\Fire_ROS_Calculator\for_testing" name="readme.txt" optional="true">C:\Program Files\MATLAB\R2018a\bin\ROS\Fire_ROS_Calculator\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\Fire_ROS_Calculator\for_testing" name="Fire_ROS_Calculator.exe" optional="false">C:\Program Files\MATLAB\R2018a\bin\ROS\Fire_ROS_Calculator\for_testing\Fire_ROS_Calculator.exe</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>C:\Program Files\MATLAB\R2018a</root>
+      <toolboxes>
+        <toolbox name="fixedpoint" />
+        <toolbox name="matlabcoder" />
+        <toolbox name="matlabhdlcoder" />
+        <toolbox name="embeddedcoder" />
+        <toolbox name="gpucoder" />
+        <toolbox name="polyspacebugfinder" />
+      </toolboxes>
+      <toolbox>
+        <fixedpoint>
+          <enabled>true</enabled>
+        </fixedpoint>
+      </toolbox>
+      <toolbox>
+        <matlabcoder>
+          <enabled>true</enabled>
+        </matlabcoder>
+      </toolbox>
+      <toolbox>
+        <matlabhdlcoder>
+          <enabled>true</enabled>
+        </matlabhdlcoder>
+      </toolbox>
+      <toolbox>
+        <embeddedcoder>
+          <enabled>true</enabled>
+        </embeddedcoder>
+      </toolbox>
+      <toolbox>
+        <gpucoder>
+          <enabled>true</enabled>
+        </gpucoder>
+      </toolbox>
+      <toolbox>
+        <polyspacebugfinder>
+          <enabled>true</enabled>
+        </polyspacebugfinder>
+      </toolbox>
+    </matlab>
+    <platform>
+      <unix>false</unix>
+      <mac>false</mac>
+      <windows>true</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>10.0</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>win64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>

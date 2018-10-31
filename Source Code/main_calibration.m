@@ -18,8 +18,8 @@ for i=1:numframes
     %read the image with the fuel bed
     imframe = imread(framefiles{i});
     %remove lens distortion from the image
-    im = undistortImage(imframe, cameraParams);
-    frame{i} = im;
+    %im = undistortImage(imframe, cameraParams);
+    frame{i} = imframe;
 end
 if man_mod==0
 waitbar((numframes*0.5)/(numframes*3),hwait,'Calibrating...')
@@ -38,17 +38,18 @@ if shape==2
         YcornersWorld(i,1)=worldPoint(1,2);
     end
     %correcting the length of the detected edge according to the entered length
-    CCLworld=sqrt((XcornersWorld(1,1)-XcornersWorld(2,1))^2+(YcornersWorld(1,1)-YcornersWorld(2,1))^2);
-    Ldiff=CLworld-CCLworld;
-    newX(1,1)=XcornersWorld(2,1)+(XcornersWorld(2,1)-XcornersWorld(1,1))/CCLworld*Ldiff;
-    newY(1,1)=YcornersWorld(2,1)+(YcornersWorld(2,1)-YcornersWorld(1,1))/CCLworld*Ldiff;
-    newX(1,2)=XcornersWorld(1,1)-(XcornersWorld(2,1)-XcornersWorld(1,1))/CCLworld*Ldiff;
-    newY(1,2)=YcornersWorld(1,1)-(YcornersWorld(2,1)-YcornersWorld(1,1))/CCLworld*Ldiff;
-    XcornersWorld(1,1)=newX(1,1);XcornersWorld(2,1)=newX(1,2);YcornersWorld(1,1)=newY(1,1);YcornersWorld(2,1)=newY(1,2);
-    imagePoint= worldToPoints(cameraParams, R, t, [XcornersWorld(1,1),YcornersWorld(1,1)]);
-    Xcorners(1,1)= imagePoint(1,1); Ycorners(1,1)= imagePoint(1,2);
-    imagePoint= worldToPoints(cameraParams, R, t, [XcornersWorld(2,1),YcornersWorld(2,1)]);
-    Xcorners(2,1)= imagePoint(1,1); Ycorners(2,1)= imagePoint(1,2);
+    %CCLworld=sqrt((XcornersWorld(1,1)-XcornersWorld(2,1))^2+(YcornersWorld(1,1)-YcornersWorld(2,1))^2);
+    %Ldiff=CLworld-CCLworld;
+    %newX(1,1)=XcornersWorld(2,1)+(XcornersWorld(2,1)-XcornersWorld(1,1))/CCLworld*Ldiff;
+    %newY(1,1)=YcornersWorld(2,1)+(YcornersWorld(2,1)-YcornersWorld(1,1))/CCLworld*Ldiff;
+    %newX(1,2)=XcornersWorld(1,1)-(XcornersWorld(2,1)-XcornersWorld(1,1))/CCLworld*Ldiff;
+    %newY(1,2)=YcornersWorld(1,1)-(YcornersWorld(2,1)-YcornersWorld(1,1))/CCLworld*Ldiff;
+    %XcornersWorld(1,1)=newX(1,1);XcornersWorld(2,1)=newX(1,2);YcornersWorld(1,1)=newY(1,1);YcornersWorld(2,1)=newY(1,2);
+    %imagePoint= worldToPoints(cameraParams, R, t, [XcornersWorld(1,1),YcornersWorld(1,1)]);
+    %Xcorners(1,1)= imagePoint(1,1); Ycorners(1,1)= imagePoint(1,2);
+    %imagePoint= worldToPoints(cameraParams, R, t, [XcornersWorld(2,1),YcornersWorld(2,1)]);
+    %Xcorners(2,1)= imagePoint(1,1); Ycorners(2,1)= imagePoint(1,2);
+    
     %The third point
     %s=atan(-((XcornersWorld(2,1)-XcornersWorld(1,1))/(YcornersWorld(2,1)-XcornersWorld(1,1)))) ;
     s=atan2((YcornersWorld(2,1)-YcornersWorld(1,1)),(XcornersWorld(2,1)-XcornersWorld(1,1)))+pi ;
@@ -108,18 +109,15 @@ elseif shape==1
 elseif shape==3
     XcornersWorld=zeros(cornersnum+1,1);
     YcornersWorld=zeros(cornersnum+1,1);
-    for i=1:cornersnum
+    for i=1:cornersnum+1
         imagePoint(1,1)=Xcorners(i,1);
         imagePoint(1,2)=Ycorners(i,1);
         worldPoint = pointsToWorld(cameraParams, R, t, imagePoint);
         XcornersWorld(i,1)=worldPoint(1,1);
         YcornersWorld(i,1)=worldPoint(1,2);
     end
-    Xcorners(cornersnum+1,1)=Xcorners(1,1);
-    Ycorners(cornersnum+1,1)=Ycorners(1,1);
-    XcornersWorld(cornersnum+1,1)=XcornersWorld(1,1);
-    YcornersWorld(cornersnum+1,1)=YcornersWorld(1,1);
 end
+
 if shape==1 || shape==2
     check_frame
     waitfor(checkf)

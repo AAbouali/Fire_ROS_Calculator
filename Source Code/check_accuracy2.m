@@ -62,7 +62,7 @@ end
         end
     end
     function calculate_Callback(src,event)
-        global hline2
+        global hline2 
         posline = getPosition(hline2);
         im = undistortImage(EvImage, cameraParams,'OutputView', 'full');
         

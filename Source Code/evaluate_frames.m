@@ -36,7 +36,7 @@ warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
 jframe=get(f,'javaframe');
 jIcon=javax.swing.ImageIcon(fullfile(appPath,'icon ROS.gif'));
 jframe.setFigureIcon(jIcon);
-changefFrames=[]; q=1;
+changefFrames=[]; q=1; edit=0;
 editMode=1; allFrames=0;
 %% callbacks
     function popFrame_Callback(src,event)
@@ -46,6 +46,9 @@ editMode=1; allFrames=0;
         haxis.Box='off';haxis.XTick=[];haxis.YTick=[];haxis.ZTick=[];haxis.XColor=[1 1 1];haxis.YColor=[1 1 1];
         hold on
         hL=line(X{Fselection},Y{Fselection},'Color','g','LineWidth',1.2);
+        if Fselection>1
+           line(X{Fselection-1},Y{Fselection-1},'Color','w','LineWidth',1.2);
+        end
         for j=1:cornersnum
             line([Xcorners(j,1),Xcorners(j+1,1)],([Ycorners(j,1),Ycorners(j+1,1)]),'Color','b','LineWidth',2)
         end
@@ -65,6 +68,7 @@ editMode=1; allFrames=0;
     end
     function Apply_Callback(src,event)
         global him
+        edit=1;
         allFrames=get(hcheckApply,'Value');
         set(f, 'pointer', 'watch'); drawnow;
         Mask = createMask(hArea,him);
@@ -133,33 +137,35 @@ editMode=1; allFrames=0;
         set(f, 'pointer', 'arrow'); drawnow;
     end
 % To save the updated locations of the fire fronts on the saved session
-% file (worksapce) 
+% file (worksapce)
     function f_CloseRequestFcn(src,event)
         set(MainF, 'pointer', 'watch'); drawnow;
         delete(f)
-        save([resultsfolder,'\',project_name], 'fflineeq', 'Xworld', 'Yworld', 'X', 'Y','-append')
-        if drawfront==1
-            namedrawfront=[project_name ' DFF'];
-            fff = figure('visible','off'); haxesff=axes(fff);
-            for i=changefFrames
-                image(haxesff,frame{i});
-                hold on
-                for j=1:i
-                    line(haxesff,X{j}(:,1),Y{j}(:,1),'Color','g','LineWidth',1.2)
+        if edit==1
+            save([resultsfolder,'\',project_name], 'fflineeq', 'Xworld', 'Yworld', 'X', 'Y','-append')
+            if drawfront==1
+                namedrawfront=[project_name ' DFF'];
+                fff = figure('visible','off'); haxesff=axes(fff);
+                for i=changefFrames
+                    image(haxesff,frame{i});
+                    hold on
+                    for j=1:i
+                        line(haxesff,X{j}(:,1),Y{j}(:,1),'Color','g','LineWidth',1.2)
+                    end
+                    for j=1:cornersnum
+                        line(haxesff,[Xcorners(j,1),Xcorners(j+1,1)],([Ycorners(j,1),Ycorners(j+1,1)]),'Color','b','LineWidth',2)
+                    end
+                    haxesff.Box='off';haxesff.XTick=[];haxesff.YTick=[];haxesff.ZTick=[];haxesff.XColor=[1 1 1];haxesff.YColor=[1 1 1];haxesff.Position=[0 0 1 1];
+                    hold off
+                    FileName = sprintf([namedrawfront,'%d.png'], i);
+                    frontFrame = getframe(haxesff);
+                    frontIamge = frame2im(frontFrame);
+                    frontIamge = imresize(frontIamge, [NaN size(frame{i},2)]) ;
+                    imwrite(frontIamge,[resultsfolder,'\',namedrawfront,'\',FileName],'png')
+                    %print(ff, '-r110', '-dpng', [resultsfolder,'\',namedrawfront,'\',FileName]);
                 end
-                for j=1:cornersnum
-                    line(haxesff,[Xcorners(j,1),Xcorners(j+1,1)],([Ycorners(j,1),Ycorners(j+1,1)]),'Color','b','LineWidth',2)
-                end
-                haxesff.Box='off';haxesff.XTick=[];haxesff.YTick=[];haxesff.ZTick=[];haxesff.XColor=[1 1 1];haxesff.YColor=[1 1 1];haxesff.Position=[0 0 1 1];
-                hold off
-                FileName = sprintf([namedrawfront,'%d.png'], i);
-                frontFrame = getframe(haxesff);
-                frontIamge = frame2im(frontFrame);
-                frontIamge = imresize(frontIamge, [NaN size(frame{i},2)]) ;
-                imwrite(frontIamge,[resultsfolder,'\',namedrawfront,'\',FileName],'png')
-                %print(ff, '-r110', '-dpng', [resultsfolder,'\',namedrawfront,'\',FileName]);
+                delete(fff)
             end
-            delete(fff)
         end
         set(MainF, 'pointer', 'arrow'); drawnow;
     end

@@ -1,10 +1,34 @@
-function main_fun
+%Fire ROS Calculator is a program with GUI built to measure the rate of spread (ROS) 
+%of a fire propagating over a surface in a laboratory setting
+%
+%This program was developed by [ADAI|CEIF](http://www.adai.pt) team (Association for the Development of 
+%Industrial Aerodynamics | Center of Studies about Forest Fires), University of Coimbra, Portugal. 
+%
+%This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+
+%%
+function Fire_ROS_Calculator
 global Xcorners Ycorners pathname calibrationFile numframes framefiles bwporig TimeSelection shape localtime results resultrow resultsfolder frames appPath checkimage videoObject
-global drawfront project_name cornersnum MainF images squareSize imagesUsed workpathname work loudstatuse AngleWorld Lworld CLworld cameraParams calibList hwait man_mod interval 
+global drawfront project_name cornersnum MainF images squareSize imagesUsed workpathname work loudstatuse AngleWorld Lworld CLworld cameraParams calibList hwait man_mod interval errors 
 %% read files 
-if isdeployed
-    appPath = 'C:\Program Files\ADAI-CEIF\application';
-else
+if isdeployed && ispc
+    [~, result] = system('path');
+    appPath = char(regexpi(result, 'Path=(.*?);', 'tokens', 'once'));
+elseif isdeployed && ismac
+    NameOfDeployedApp = 'Fire_ROS_Calculator'; 
+    [~, result] = system(['top -n100 -l1 | grep ' NameOfDeployedApp ' | awk ''{print $1}''']);
+    result=strtrim(result);
+    [status, result] = system(['ps xuwww -p ' result ' | tail -n1 | awk ''{print $NF}''']);
+    if status==0
+        diridx=strfind(result,[NameOfDeployedApp '.app']);
+        appPath=result(1:diridx-2);
+    else
+        msgbox({'realpwd not set:',result})
+    end
+elseif isdeployed && isunix
+    [~, result] = system('echo $PATH');
+    appPath = char(regexpi(result, '(.*?):', 'tokens', 'once')); 
+elseif isdeployed==0
     appPath = pwd;
 end
 calibPath=fullfile(appPath,'calibrations');
@@ -260,8 +284,12 @@ hbuttonCheckAcc  = uicontrol(hpanelEvaluate,'Style','pushbutton','String','Check
 haxisEval = axes(hpanelEvaluate,'box','off','xtick',[],'ytick',[],'ztick',[],'xcolor',[1 1 1],'ycolor',[1 1 1],'Units','pixels',...
     'Position',[20,10,450,300],'color','white');
 haxisErr = axes(hpanelEvaluate,'Units','pixels','Position',[510,350,250,200],'color','white');
-haxisExt = axes(hpanelEvaluate,'Units','pixels','Position',[510,80,250,200],'color','white');
-
+haxisExt = axes(hpanelEvaluate,'Units','pixels','Position',[510,100,250,200],'color','white');
+htextACCM  = uicontrol(hpanelEvaluate,'Style','text','String','Ave. S. Error (cm): +/-','FontSize',11,'Position',[510,35,150,24]);
+heditACCM  = uicontrol(hpanelEvaluate,'Style','edit','Position',[670,35,50,25],'FontSize',10,'Enable','off');
+htextACCMAX  = uicontrol(hpanelEvaluate,'Style','text','String','Max. S. Error(cm): +/-','FontSize',11,'Position',[510,5,150,24]);
+heditACCMAX  = uicontrol(hpanelEvaluate,'Style','edit','Position',[670,5,50,25],'FontSize',10,'Enable','off');
+%%%%%%%%%%%
 
 MainF.Name = 'Fire ROS Calculator';
 movegui(MainF,'center')
@@ -272,7 +300,7 @@ MainF.Visible = 'on';
 
 warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
 jframe=get(MainF,'javaframe');
-jIcon=javax.swing.ImageIcon(fullfile(appPath,'icon ROS.gif'));
+jIcon=javax.swing.ImageIcon(fullfile(appPath,'icon_ROS.gif'));
 jframe.setFigureIcon(jIcon);
 
 %setting some values
@@ -285,7 +313,7 @@ loudstatuse=0;
     function MainF_CloseRequestFcn(src,event)
         check_exit
     end
-%% interactiv controls to get the inputs  (New project Tab)
+%% interactiv controls to get the inputs  (New session Tab)
     function popCalib_Callback(src,event)
         CalibSelection=get(hpopCalib,'Value');
         if CalibSelection==size(calibList,2)
@@ -300,8 +328,9 @@ loudstatuse=0;
         calibrationFile = fullfile(pathname , calibrationName);
     end
     function buttonIframes_Callback(src,event)
+        global framespathname
         [frames, framespathname] = uigetfile({'*.jpg;*.tif;*.png;*.gif','All Image Files';...
-            '*.*','All Files' },'Select the Frames','MultiSelect', 'on');
+            '*.*','All Files' },'Select the Frames','MultiSelect', 'on',pathname);
         framefiles=fullfile(framespathname,frames);
         numframes = numel(frames);
         set(heditIframes,'String',framespathname);
@@ -309,8 +338,9 @@ loudstatuse=0;
         localtime(1,(1:numframes-1))=laps;
     end
     function buttonIbed_Callback(src,event)
+        global framespathname
         [bwp, bwp_pathname] = uigetfile({'*.jpg;*.tif;*.png;*.gif','All Image Files';...
-            '*.*','All Files' },'Select the Fuel Bed Image with Pattern');
+            '*.*','All Files' },'Select the Fuel Bed Image with Pattern',framespathname);
         bwporig = imread(fullfile(bwp_pathname,bwp));
         set(heditIbed,'String',bwp);
     end
@@ -359,8 +389,9 @@ loudstatuse=0;
         end
     end
     function buttonDetect_Callback(src,event)
+        global framespathname
         [JPGcorners, JPGcorners_pathname] = uigetfile({'*.jpg;*.tif;*.png;*.gif;*.bmp','All Image Files';...
-            '*.*','All Files' },'Select an image to detect the corners of the bed from it');
+            '*.*','All Files' },'Select an image to detect the corners of the bed from it',framespathname);
         checkimage=fullfile(JPGcorners_pathname,JPGcorners);
         hcornersF=figure('NumberTitle','off'); imshow(checkimage,'InitialMagnification', 'fit');
         title('Detect one edge (length) of the the bed');
@@ -380,7 +411,8 @@ loudstatuse=0;
         set(MainF, 'pointer', 'arrow')
     end
     function buttonSelect_Callback(src,event)
-        resultsfolder = uigetdir('C:\','Select a Folder To Save the Results On');
+        global framespathname
+        resultsfolder = uigetdir(framespathname,'Select a Folder To Save the Results On');
         set(heditResults,'String',resultsfolder);
         hbuttonCalibrateM.Enable='on';
         hbuttonCalibrateA.Enable='on';
@@ -438,7 +470,7 @@ loudstatuse=0;
         end
     end
 
-%% interactive controls for the results panel (New project Tab)
+%% interactive controls for the results panel (New session Tab)
     function buttonFrameEva_Callback(src,event)
         evaluate_frames 
     end
@@ -498,7 +530,7 @@ loudstatuse=0;
         resultrow=2;
     end
     function buttonSelect2_Callback(src,event)
-        resultsfolder = uigetdir('C:\','Select a Folder To Save the Results On');
+        resultsfolder = uigetdir(workpathname,'Select a Folder To Save the Results On');
         set(heditAresults,'String',resultsfolder);
     end
     function editNewName_Callback(src,event)
@@ -791,9 +823,11 @@ loudstatuse=0;
         global boardSize imagePoints Size loadCalib
         Size=str2double(get(heditSizeE,'String'));
         worldPoints = generateCheckerboardPoints(boardSize, Size);
-        cameraParams = estimateCameraParameters(imagePoints, worldPoints);
+        [cameraParams,~,errors] = estimateCameraParameters(imagePoints, worldPoints);
         showReprojectionErrors(cameraParams,'Parent',haxisErr);
         showExtrinsics(cameraParams,'Parent',haxisExt);
+        set(heditACCM,'String',round((mean(mean(errors.ExtrinsicsErrors.TranslationVectorsError))/10),1))
+        set(heditACCMAX,'String',round((max(max(errors.ExtrinsicsErrors.TranslationVectorsError))/10),1))
         hbuttonSaveCalib.Enable='on';
         hbuttonCheckAcc.Enable='on';
         loadCalib=0;

@@ -1,6 +1,6 @@
 function measuring_dist
 global Xworld Yworld numframes shape XcornersWorld YcornersWorld cornersnum resultsfolder results resultrow  R t cameraParams
-global dist_name DistImage handles time ffpoints fflineeq loudstatuse workpathname work X Y Xcorners Ycorners appPath
+global dist_name DistImage handles time ffpoints fflineeq loudstatuse workpathname work X Y Xcorners Ycorners appPath pathname
 if loudstatuse==1
     load([workpathname,work])
 end
@@ -92,7 +92,7 @@ image_source=1;
 
     function select_Callback(src,event)
         [DistImageName, DistImage_pathname] = uigetfile({'*.jpg;*.tif;*.png;*.gif','All Image Files';...
-            '*.*','All Files' },'Select an image to measure distances from it');
+            '*.*','All Files' },'Select an image to measure distances from it',pathname);
         DistImage=imread(fullfile(DistImage_pathname,DistImageName));
         cla reset
         hDistImage = image(haxis,DistImage);

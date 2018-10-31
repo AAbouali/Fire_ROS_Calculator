@@ -1,7 +1,7 @@
 function draw_frame
-global cornersnum Xcorners Ycorners
+global cornersnum Xcorners Ycorners framespathname
 [JPGcorners, JPGcorners_pathname] = uigetfile({'*.jpg;*.tif;*.png;*.gif;*.bmp','All Image Files';...
-    '*.*','All Files' },'Select an image to detect the corners of the bed from it');
+    '*.*','All Files' },'Select an image to detect the corners of the bed from it',framespathname);
 
 hcornersF=figure('Visible','off','Units','normalized');
 haxis = axes(hcornersF,'Units','normalized','Position',[0,0.15,1,0.8]);
@@ -35,10 +35,11 @@ hcornersF.Visible = 'on';
         end
     end
     function ok_Callback(src,event)
+        Xcorners=[];Ycorners=[];
         global handles
         posline=cell(cornersnum);
-        Xcorners=zeros(4,1);
-        Ycorners=zeros(4,1);
+        Xcorners=zeros(cornersnum+1,1);
+        Ycorners=zeros(cornersnum+1,1);
         for i=1:cornersnum
             posline{i} = getPosition(handles.frame{i});
         end
@@ -46,6 +47,8 @@ hcornersF.Visible = 'on';
             Xcorners(i,1)=posline{i}(1,1);
             Ycorners(i,1)=posline{i}(1,2);
         end
+        Xcorners(cornersnum+1,1)=Xcorners(1,1);
+        Ycorners(cornersnum+1,1)=Ycorners(1,1);
         close(hcornersF)
     end
 end
