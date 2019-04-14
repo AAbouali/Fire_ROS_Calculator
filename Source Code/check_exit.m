@@ -13,12 +13,13 @@ movegui(exitF,'center')
 exitF.MenuBar = 'none';
 exitF.ToolBar = 'none';
 exitF.NumberTitle='off';
-exitF.Visible = 'on';
+
 
 warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
 jframe=get(exitF,'javaframe');
 jIcon=javax.swing.ImageIcon(fullfile(appPath,'icon ROS.gif'));
 jframe.setFigureIcon(jIcon);
+exitF.Visible = 'on';
 
     function Exit_Callback(src,event)
         delete(exitF)

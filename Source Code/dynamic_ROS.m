@@ -1,19 +1,6 @@
 function dynamic_ROS
-global numframes cornersnum Xworld Yworld XcornersWorld YcornersWorld shape results resultrow resultsfolder time appPath
-global R t cameraParams ffpoints fflineeq posline nolines handles loudstatuse workpathname work X Y Xcorners Ycorners Dist Distadd Fframe Lframe eqline lineROfS
-if loudstatuse==1
-    load([workpathname,work])
-    %%%
-    %if loading a session made by version 1.0 or 1.1
-    %load([workpathname,work],'XcornersWorld', 'YcornersWorld', 'ffpoints', 'fflineeq', 'time', 'R', 't', 'cameraParams', 'Xworld', 'Yworld', 'X', 'Y',...
-    %    'numframes', 'Xcorners', 'Ycorners', 'shape')
-    %Xnew=cell(1,numframes); Ynew=cell(1,numframes); Xworldnew=cell(1,numframes); Yworldnew=cell(1,numframes); eqnew=cell(1,numframes);
-    %for i=1:numframes
-    %    Xnew{i}=X(:,i); Ynew{i}=Y(:,i); Xworldnew{i}=Xworld(:,i); Yworldnew{i}=Yworld(:,i); eqnew{i}(:,1:2)=fflineeq(:,2*i-1:2*i);
-    %end
-    %X=Xnew; Y=Ynew; Xworld=Xworldnew; Yworld=Yworldnew; fflineeq=eqnew;
-    %%%%
-end
+global numframes cornersnum Xworld Yworld XcornersWorld YcornersWorld shape results resultrow resultsfolder time appPath Nfires fireLastFrame
+global R t cameraParams fflineeq posline  handles Dist Distadd Fframe Lframe eqline lineROfS 
 posline=[];
 handles=[];
 %% building the GUI
@@ -47,29 +34,32 @@ haxis       = axes(panel,'box','off','xtick',[],'ytick',[],'ztick',[],'xcolor',[
 c = uicontextmenu;
 haxis.UIContextMenu = c;
 m1 = uimenu(c,'Label','Add Lines','Callback',@drawLines);
+
 % drawing the propagation map on the axis
 hold on
-for i=1:numframes
-    line(Xworld{i},(Yworld{i}),'Color','r')
+for k=1:Nfires
+    for i=1:fireLastFrame(1,k)
+        line(Xworld{k,i},Yworld{k,i},'Color','r','LineWidth',1);
+    end
 end
-
 for i=1:cornersnum
     line([XcornersWorld(i,1),XcornersWorld(i+1,1)],([YcornersWorld(i,1),YcornersWorld(i+1,1)]),'Color','b','LineWidth',2)
 end
 
-hold off
+
 axis equal
 f.Name = 'Calculate Dynamic ROS';
 movegui(f,'center')
 f.MenuBar = 'none';
 f.ToolBar = 'none';
 f.NumberTitle='off';
-f.Visible = 'on';
+
 
 warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
 jframe=get(f,'javaframe');
 jIcon=javax.swing.ImageIcon(fullfile(appPath,'icon ROS.gif'));
 jframe.setFigureIcon(jIcon);
+f.Visible = 'on';
 
 PFframe=0;PLframe=0;
 %% callbacks
@@ -83,20 +73,36 @@ PFframe=0;PLframe=0;
     end
 % calculating the ROS and saving the result
     function start_Callback(src,event)
-        global CPFframe CPLframe
+        global CPFframe 
         Fframe=str2double(get(heditStart,'String'));
-        line(haxis,Xworld{Fframe},(Yworld{Fframe}),'Color','g')
-        if PFframe~=0 && Fframe~=PFframe
-            line(haxis,Xworld{PFframe},(Yworld{PFframe}),'Color','r')
+        for k=1:Nfires
+            if Fframe<=fireLastFrame(1,k)
+                line(haxis,Xworld{k,Fframe},(Yworld{k,Fframe}),'Color','g','LineWidth',1)
+            end
         end
-        CPFframe=PFframe; PFframe=Fframe; 
+        if PFframe~=0 && Fframe~=PFframe
+            for k=1:Nfires
+                if PFframe<=fireLastFrame(1,k)
+                    line(haxis,Xworld{k,PFframe},(Yworld{k,PFframe}),'Color','r','LineWidth',1)
+                end
+            end
+        end
+        CPFframe=PFframe; PFframe=Fframe;
     end
     function end_Callback(src,event)
-        global CPLframe CPFframe
+        global CPLframe 
         Lframe=str2double(get(heditEnd,'String'));
-        line(haxis,Xworld{Lframe},(Yworld{Lframe}),'Color','g')
-        if PLframe~=0 && Lframe~=PLframe 
-            line(haxis,Xworld{PLframe},(Yworld{PLframe}),'Color','r')
+        for k=1:Nfires
+            if Lframe<=fireLastFrame(1,k)
+                line(haxis,Xworld{k,Lframe},(Yworld{k,Lframe}),'Color','g','LineWidth',1)
+            end
+        end
+        if PLframe~=0 && Lframe~=PLframe
+            for k=1:Nfires
+                if PLframe<=fireLastFrame(1,k)
+                    line(haxis,Xworld{k,PLframe},(Yworld{k,PLframe}),'Color','r','LineWidth',1)
+                end
+            end
         end
         CPLframe=PLframe; PLframe=Lframe;
     end
@@ -125,29 +131,32 @@ PFframe=0;PLframe=0;
         p2= worldToPoints(cameraParams, R, t, [posline(2,1),posline(2,2)]);
         eqline=polyfit([posline(1,1) posline(2,1)],[posline(1,2) posline(2,2)],1);
         j=1;
+        
         %finding the intersection between the prescribed line and the fire
-        %front lines to calculate the passed distances 
+        %front lines to calculate the passed distances
         for i=Fframe:Lframe
-            for k=1:size(Xworld{i},1)-1
-                line_x_intersect(j,i-Fframe+1) = roots(eqline-fflineeq{i}(k,:));
-                line_y_intersect(j,i-Fframe+1) = polyval(fflineeq{i}(k,:),line_x_intersect(j,i-Fframe+1));
-                if ((( line_x_intersect(1,i-Fframe+1)>=Xworld{i}(k,1) && line_x_intersect(j,i-Fframe+1)<=Xworld{i}(k+1,1) && line_y_intersect(j,i-Fframe+1)>=Yworld{i}(k,1) && line_y_intersect(j,i-Fframe+1)<=Yworld{i}(k+1,1))||...
-                        (line_x_intersect(j,i-Fframe+1)<=Xworld{i}(k,1) && line_x_intersect(j,i-Fframe+1)>=Xworld{i}(k+1,1) && line_y_intersect(j,i-Fframe+1)<=Yworld{i}(k,1) && line_y_intersect(j,i-Fframe+1)>=Yworld{i}(k+1,1))||...
-                        (line_x_intersect(j,i-Fframe+1)<=Xworld{i}(k,1) && line_x_intersect(j,i-Fframe+1)>=Xworld{i}(k+1,1) && line_y_intersect(j,i-Fframe+1)>=Yworld{i}(k,1) && line_y_intersect(j,i-Fframe+1)<=Yworld{i}(k+1,1))||...
-                        (line_x_intersect(j,i-Fframe+1)>=Xworld{i}(k,1) && line_x_intersect(j,i-Fframe+1)<=Xworld{i}(k+1,1) && line_y_intersect(j,i-Fframe+1)<=Yworld{i}(k,1) && line_y_intersect(j,i-Fframe+1)>=Yworld{i}(k+1,1))))&&...
-                        ((line_x_intersect(j,i-Fframe+1)>=posline(1,1) && line_x_intersect(j,i-Fframe+1)<=posline(2,1))||(line_x_intersect(j,i-Fframe+1)<=posline(1,1) && line_x_intersect(j,i-Fframe+1)>=posline(2,1)))
-                    no_inter=0;
-                    break
-                else
-                    no_inter=1;
+            no_inter=1;
+            for w=1:Nfires
+                if i<=fireLastFrame(1,w) && no_inter==1
+                    xi=[]; yi=[];
+                    [xi,yi] = polyxpoly(posline(:,1),posline(:,2),Xworld{w,i},Yworld{w,i});
+                    if isempty(xi) || isempty(yi)
+                        no_inter=1;
+                    else
+                        plot(haxis,xi,yi,'o')
+                        line_x_intersect(j,i)=xi(1,1);
+                        line_y_intersect(j,i)=yi(1,1);
+                        no_inter=0;
+                        break
+                    end
                 end
             end
-            if no_inter==1;
+            if no_inter==1
                 break
             end
         end
         %calculating the distance and RofS
-        if no_inter==0;
+        if no_inter==0
             for i=1:localTotframes-1
                 Dist(j,i+1) = ((line_x_intersect(j,i) - line_x_intersect(j,(i+1))) ^ 2 + (line_y_intersect(j,i) - line_y_intersect(j,(i+1))) ^ 2) ^ 0.5;
             end
@@ -161,93 +170,49 @@ PFframe=0;PLframe=0;
             end
             lineROfS(:,j)=polyfit(linetime,Distadd(j,:),1);
         end
-        if Dist==0
-            for i=Fframe:Lframe
-                for k=1:size(Xworld{i},1)-1
-                    line_x_intersect(j,i-Fframe+1) = fzero(@(x) polyval(eqline-fflineeq{i}(k,:),x),0);
-                    line_y_intersect(j,i-Fframe+1) = polyval(fflineeq{i}(k,:),line_x_intersect(j,i-Fframe+1));
-                    if ((( line_x_intersect(1,i-Fframe+1)>=Xworld{i}(k,1) && line_x_intersect(j,i-Fframe+1)<=Xworld{i}(k+1,1) && line_y_intersect(j,i-Fframe+1)>=Yworld{i}(k,1) && line_y_intersect(j,i-Fframe+1)<=Yworld{i}(k+1,1))||...
-                            (line_x_intersect(j,i-Fframe+1)<=Xworld{i}(k,1) && line_x_intersect(j,i-Fframe+1)>=Xworld{i}(k+1,1) && line_y_intersect(j,i-Fframe+1)<=Yworld{i}(k,1) && line_y_intersect(j,i-Fframe+1)>=Yworld{i}(k+1,1))||...
-                            (line_x_intersect(j,i-Fframe+1)<=Xworld{i}(k,1) && line_x_intersect(j,i-Fframe+1)>=Xworld{i}(k+1,1) && line_y_intersect(j,i-Fframe+1)>=Yworld{i}(k,1) && line_y_intersect(j,i-Fframe+1)<=Yworld{i}(k+1,1))||...
-                            (line_x_intersect(j,i-Fframe+1)>=Xworld{i}(k,1) && line_x_intersect(j,i-Fframe+1)<=Xworld{i}(k+1,1) && line_y_intersect(j,i-Fframe+1)<=Yworld{i}(k,1) && line_y_intersect(j,i-Fframe+1)>=Yworld{i}(k+1,1))))&&...
-                            ((line_x_intersect(j,i-Fframe+1)>=posline(1,1) && line_x_intersect(j,i-Fframe+1)<=posline(2,1))||(line_x_intersect(j,i-Fframe+1)<=posline(1,1) && line_x_intersect(j,i-Fframe+1)>=posline(2,1)))
-                        for s=k+1:size(Xworld{i},1)-1
-                            line_x_intersect(j,i-Fframe+1) = fzero(@(x) polyval(eqline-fflineeq{i}(s,:),x),0);
-                            line_y_intersect(j,i-Fframe+1) = polyval(fflineeq{i}(s,:),line_x_intersect(j,i-Fframe+1));
-                            if ((( line_x_intersect(1,i-Fframe+1)>=Xworld{i}(s,1) && line_x_intersect(j,i-Fframe+1)<=Xworld{i}(s+1,1) && line_y_intersect(j,i-Fframe+1)>=Yworld{i}(s,1) && line_y_intersect(j,i-Fframe+1)<=Yworld{i}(s+1,1))||...
-                                    (line_x_intersect(j,i-Fframe+1)<=Xworld{i}(s,1) && line_x_intersect(j,i-Fframe+1)>=Xworld{i}(s+1,1) && line_y_intersect(j,i-Fframe+1)<=Yworld{i}(s,1) && line_y_intersect(j,i-Fframe+1)>=Yworld{i}(s+1,1))||...
-                                    (line_x_intersect(j,i-Fframe+1)<=Xworld{i}(s,1) && line_x_intersect(j,i-Fframe+1)>=Xworld{i}(s+1,1) && line_y_intersect(j,i-Fframe+1)>=Yworld{i}(s,1) && line_y_intersect(j,i-Fframe+1)<=Yworld{i}(s+1,1))||...
-                                    (line_x_intersect(j,i-Fframe+1)>=Xworld{i}(s,1) && line_x_intersect(j,i-Fframe+1)<=Xworld{i}(s+1,1) && line_y_intersect(j,i-Fframe+1)<=Yworld{i}(s,1) && line_y_intersect(j,i-Fframe+1)>=Yworld{i}(s+1,1))))&&...
-                                    ((line_x_intersect(j,i-Fframe+1)>=posline(1,1) && line_x_intersect(j,i-Fframe+1)<=posline(2,1))||(line_x_intersect(j,i-Fframe+1)<=posline(1,1) && line_x_intersect(j,i-Fframe+1)>=posline(2,1)))
-                                no_inter=0;
-                                break
-                            else
-                                no_inter=1;
-                            end
-                        end
-                        break
-                    else
-                        no_inter=1;
-                    end
-                end
-                if no_inter==1;
-                    break
-                end
-            end
-            %calculating the distance and RofS
-            if no_inter==0;
-                for i=1:localTotframes-1
-                    Dist(j,i+1) = ((line_x_intersect(j,i) - line_x_intersect(j,(i+1))) ^ 2 + (line_y_intersect(j,i) - line_y_intersect(j,(i+1))) ^ 2) ^ 0.5;
-                end
-                Dist(j,1)=0; %consider the first frame as the 0 refrance
-                Distadd(j,1)=Dist(j,1);
-                for i=2:localTotframes
-                    Distadd(j,i)=Distadd(j,i-1)+Dist(j,i);
-                end
-                for i=1:localTotframes-1
-                    linelocalRofS(j,i)=(Distadd(j,i+1)-Distadd(j,i))/(linetime(1,i+1)-linetime(1,i));
-                end
-                lineROfS(:,j)=polyfit(linetime,Distadd(j,:),1);
-            end
-        end
-        if no_inter==0;
+        if no_inter==0
             %saving the results into the excel sheet
             results{resultrow,1}=resultname;results{resultrow,2}=('(Dynamic ROS)');
             resultrow=resultrow+1;
             results{resultrow,1}=('the considered frame are from frame:');results{resultrow,2}=Fframe;results{resultrow,3}=('to frame');results{resultrow,4}=Lframe;
             resultrow=resultrow+1;
-            results{resultrow,1}=('Avarage ROS');
-            results{resultrow,2}=lineROfS(1,1);
+            results{resultrow,1}=('Avarage ROS (cm/s)');
+            results{resultrow,2}=lineROfS(1,1)/10;
             resultrow=resultrow+1;
             if  localTotframes>2
-                results{resultrow,1}=('The passed distances');
+                results{resultrow,1}=('The accumulated passed distances (cm)');
                 resultrow=resultrow+1;
-                results(resultrow,1:size(Distadd,2))=num2cell(Distadd(1,:));
+                results(resultrow,1:size(Distadd,2))=num2cell(Distadd(1,:)/10);
                 resultrow=resultrow+1;
-                results{resultrow,1}=('The Dynamic ROS');
+                results{resultrow,1}=('The Dynamic ROS (cm/s)');
                 resultrow=resultrow+1;
-                results(resultrow,1:size(linelocalRofS,2))=num2cell(linelocalRofS(1,:));
+                results(resultrow,1:size(linelocalRofS,2))=num2cell(linelocalRofS(1,:)/10);
                 resultrow=resultrow+2;
             end
             %svaing a figure showing where this ROS was calculated
-            figure('Visible','off');
+            hf2=figure('Visible','off','Position',[28,66,700,540]); haxesROS=axes(hf2);
+            haxesROS.Box='off';haxesROS.XTick=[];haxesROS.YTick=[];haxesROS.ZTick=[];haxesROS.XColor='none';haxesROS.YColor='none';
             title('Postion of the lines where the ROS was calculated along them');
             hold on
-            for i=1:numframes
-                line(Xworld{i},(Yworld{i}),'Color','r')
+            for k=1:Nfires
+                for i=1:fireLastFrame(1,k)
+                    line(haxesROS,Xworld{k,i},Yworld{k,i},'Color','r','LineWidth',1);
+                end
             end
-            line([posline(1,1),posline(2,1)],[posline(1,2),posline(2,2)],'Color','g','LineWidth',2);
+            line(haxesROS,[posline(1,1),posline(2,1)],[posline(1,2),posline(2,2)],'Color','g','LineWidth',2);
             if shape~=4
                 for i=1:cornersnum
-                    line([XcornersWorld(i,1),XcornersWorld(i+1,1)],([YcornersWorld(i,1),YcornersWorld(i+1,1)]),'Color','b','LineWidth',2)
+                    line(haxesROS,[XcornersWorld(i,1),XcornersWorld(i+1,1)],([YcornersWorld(i,1),YcornersWorld(i+1,1)]),'Color','k','LineWidth',2)
                 end
             end
             hold off
             axis equal
-            saveas(gcf,[resultsfolder,'\',resultname,'(Dynamic ROS)'],'jpeg')
-            set(heditResult,'String',[num2str(round(lineROfS(1,1))),' mm/s']);
-            set(heditMax,'String',[num2str(round(max(linelocalRofS(1,:)))),' mm/s']);
-            set(heditMin,'String',[num2str(round(min(linelocalRofS(1,:)))),' mm/s']);
+            figg=gcf;
+            print(figg,[resultsfolder,'/',resultname],'-dpng','-r300')
+            %saveas(gcf,[resultsfolder,'\',resultname,'(Dynamic ROS)'],'jpeg')
+            set(heditResult,'String',[num2str(round(lineROfS(1,1)/10)),' cm/s']);
+            set(heditMax,'String',[num2str(round(max(linelocalRofS(1,:)))/10),' cm/s']);
+            set(heditMin,'String',[num2str(round(min(linelocalRofS(1,:)))/10),' cm/s']);
         else
             hW = warndlg(sprintf('The placed line is not intersecting with one of the fire front lines \n Tip: Change the line location and/or check the considered frames range'),'Error!','modal');
         end

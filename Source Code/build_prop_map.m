@@ -1,6 +1,6 @@
 function build_prop_map
 global Xworld Yworld numframes shape XcornersWorld YcornersWorld cornersnum resultsfolder plotcolors linestyles time man_mod
-global R t cameraParams ffpoints fflineeq loudstatuse workpathname work X Y Xcorners Ycorners appPath
+global R t cameraParams ffpoints fflineeq loudstatuse workpathname work X Y Xcorners Ycorners appPath Nfires fireLastFrame smooth
 if loudstatuse==1
     load([workpathname,work])
     %%%
@@ -26,15 +26,17 @@ heditName    = uicontrol(f,'Style','edit','Position',[285,20,150,30],'FontWeight
     'Enable','on','Callback',@name_Callback );
 hbuttonSave  = uicontrol(f,'Style','pushbutton','String','Save','Enable','off',...
     'FontWeight','bold','FontSize',12,'Position',[460,15,100,40],'callback',{@save_Callback});
-hbgStyle     = uibuttongroup(f,'Units','pixels','Title','Lines Style','FontSize',9,'Position',[750 460 167 150],'SelectionChangedFcn',@selectionStyle);
+hbgStyle     = uibuttongroup(f,'Units','pixels','Title','Lines Style','FontSize',9,'Position',[750 510 167 150],'SelectionChangedFcn',@selectionStyle);
 hCdashed      = uicontrol(hbgStyle,'Style','radiobutton','String','Colored and Dashed','Position',[13 105 140 25],'FontSize',9);
 hCsolid       = uicontrol(hbgStyle,'Style','radiobutton','String','Colored and Solid','Position',[13 80 140 25],'FontSize',9);
 hBdashed      = uicontrol(hbgStyle,'Style','radiobutton','String','B&W and Dashed','Position',[13 55 140 25],'FontSize',9);
 hBsolid       = uicontrol(hbgStyle,'Style','radiobutton','String','B&W and Solid','Position',[13 30 140 25],'FontSize',9);
 hBfill       = uicontrol(hbgStyle,'Style','radiobutton','String','Colored filling','Position',[13 5 140 25],'FontSize',9);
-hbgFrame     = uibuttongroup(f,'Units','pixels','Title','Fule Bed Frames','FontSize',9,'Position',[750 376 120 70],'SelectionChangedFcn',@selectionFrame);
+hbgFrame     = uibuttongroup(f,'Units','pixels','Title','Fule Bed Frame','FontSize',9,'Position',[750 430 120 70],'SelectionChangedFcn',@selectionFrame);
 hOn          = uicontrol(hbgFrame,'Style','radiobutton','String','On','Position',[13 30 40 25],'FontSize',9);
 hOff          = uicontrol(hbgFrame,'Style','radiobutton','String','Off','Position',[13 5 40 25],'FontSize',9);
+hcheckSmooth = uicontrol(f,'Units','pixels','Style','checkbox','String','Smooth Front Lines','FontSize',10,'Value',0,'Position',[750 400 150 23],'callback',{@checkSmooth_Callback});
+hpopSmoothDegree = uicontrol(f,'Style','pop','Units','pixels','FontSize',10,'Position',[750,370,130,25],'String',{'Smooth Degree 1','Smooth Degree 2','Smooth Degree 3'},'callback',{@popSmoothDegree_Callback});
 hbgTimeText     = uibuttongroup(f,'Units','pixels','Title','Time Lables','FontSize',9,'Position',[750 90 167 270],'SelectionChangedFcn',@selectionFrame);
 hcheckTime = uicontrol(hbgTimeText,'Style','checkbox','String','Add time lables','FontWeight','bold',...
     'FontSize',10,'Value',0,'Position',[15 225 150 23],'callback',{@checkTime_Callback});
@@ -58,14 +60,18 @@ heditRank    = uicontrol(f,'Style','edit','Position',[850,50,60,30],'FontWeight'
 haxis        = axes(f,'box','off','xtick',[],'ytick',[],'ztick',[],'xcolor',[1 1 1],'ycolor',[1 1 1],'Units','pixels',...
     'Position',[28,66,700,540],'color','white','PlotBoxAspectRatio',[1 1 1]);
 
-expframerank=1; YworldPr=cell(1,numframes);
-for i=1:numframes
-    YworldPr{i}=Yworld{i}*-1;
+expframerank=1; YworldPr=cell(Nfires,numframes);
+for k=1:Nfires
+    for i=1:fireLastFrame(1,k)
+        YworldPr{k,i}=Yworld{k,i}*-1;
+    end
 end
 YcornersWorldPr=YcornersWorld*-1;
 hold on
-for i=1:numframes
-    line(Xworld{i},(YworldPr{i}),'Color',plotcolors(i+(expframerank-1),:),'linestyle',linestyles{i+(expframerank-1),1},'LineWidth',1)
+for k=1:Nfires
+    for i=1:fireLastFrame(1,k)
+        line(Xworld{k,i},(YworldPr{k,i}),'Color',plotcolors(i+(expframerank-1),:),'linestyle',linestyles{i+(expframerank-1),1},'LineWidth',1)
+    end
 end
 if shape~=4
     for i=1:cornersnum
@@ -92,12 +98,24 @@ movegui(f,'center')
 f.MenuBar = 'none';
 f.ToolBar = 'none';
 f.NumberTitle='off';
-f.Visible = 'on';
+
 
 warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
 jframe=get(f,'javaframe');
 jIcon=javax.swing.ImageIcon(fullfile(appPath,'icon ROS.gif'));
 jframe.setFigureIcon(jIcon);
+f.Visible = 'on';
+
+%smoothing fire frontline
+smoothX=cell(Nfires,numframes);
+smoothY=cell(Nfires,numframes);
+for k=1:Nfires
+    for i=1:fireLastFrame(1,k)
+        smoothX{k,i} = sgolayfilt(Xworld{k,i}, 2, 45);
+        smoothY{k,i} = sgolayfilt(YworldPr{k,i}, 2, 45);
+    end
+end
+smooth=0;
 %% interactive controls of the map
     function name_Callback(source,event)
         global mapname
@@ -147,14 +165,44 @@ jframe.setFigureIcon(jIcon);
             Spos=zeros(Nlables,2); Stime=cell(Nlables,1);
             for i=1:Nlables
                 Sframe=i*floor(numframes/(Nlables+1));
-                Sorder=randi([1,size(Xworld{Sframe},1)]);
-                Spos(i,1)=Xworld{Sframe}(Sorder,1); Spos(i,2)=YworldPr{Sframe}(Sorder,1);
+                Sorder=randi([1,size(Xworld{1,Sframe},1)]);
+                Spos(i,1)=Xworld{1,Sframe}(Sorder,1); Spos(i,2)=YworldPr{1,Sframe}(Sorder,1);
                 Stime{i,1}=[num2str(time(1,Sframe+1)+((expframerank-1)*time(1,1))),'s'];
             end
             hpopLable.String=Stime; hpopLable.Value=1;
         else
             heditFsize.Enable='off'; heditNLable.Enable='off'; hpopLable.Enable='off'; hbuttonLable.Enable='off';
             hpopColor.Enable='off'; hcheckBorder.Enable='off';
+        end
+        updateplot
+    end
+    function checkSmooth_Callback(source,event)
+        smooth=get(hcheckSmooth,'value');
+        updateplot
+    end
+    function popSmoothDegree_Callback(source,event)
+        smoothDegree=get(hpopSmoothDegree,'value');
+        if smoothDegree==1
+            for k=1:Nfires
+                for i=1:fireLastFrame(1,k)
+                    smoothX{k,i} = sgolayfilt(Xworld{k,i}, 5, 45);
+                    smoothY{k,i} = sgolayfilt(YworldPr{k,i}, 5, 45);
+                end
+            end
+        elseif smoothDegree==2
+            for k=1:Nfires
+                for i=1:fireLastFrame(1,k)
+                    smoothX{k,i} = sgolayfilt(Xworld{k,i}, 5, 87);
+                    smoothY{k,i} = sgolayfilt(YworldPr{k,i}, 5, 87);
+                end
+            end
+        else
+            for k=1:Nfires
+                for i=1:fireLastFrame(1,k)
+                    smoothX{k,i} = sgolayfilt(Xworld{k,i}, 5, 167);
+                    smoothY{k,i} = sgolayfilt(YworldPr{k,i}, 5, 167);
+                end
+            end
         end
         updateplot
     end
@@ -168,7 +216,7 @@ jframe.setFigureIcon(jIcon);
         global Spos
         Labselection=get(hpopLable,'Value');
         Sframe=Labselection*floor(numframes/(Nlables+1));
-        line(haxis,Xworld{Sframe},(YworldPr{Sframe}),'Color','r','LineWidth',2)
+        line(haxis,Xworld{1,Sframe},(YworldPr{1,Sframe}),'Color','r','LineWidth',2)
         [Spos(Labselection,1),Spos(Labselection,2)] = ginput(1);
         updateplot
     end
@@ -181,8 +229,8 @@ jframe.setFigureIcon(jIcon);
         Nlables=str2double(get(heditNLable,'String'));
         for i=1:Nlables
             Sframe=i*floor(numframes/(Nlables+1));
-            Sorder=randi([1,size(Xworld{Sframe},1)]);
-            Spos(i,1)=Xworld{Sframe}(Sorder,1); Spos(i,2)=YworldPr{Sframe}(Sorder,1);
+            Sorder=randi([1,size(Xworld{1,Sframe},1)]);
+            Spos(i,1)=Xworld{1,Sframe}(Sorder,1); Spos(i,2)=YworldPr{1,Sframe}(Sorder,1);
             Stime{i,1}=[num2str(time(1,Sframe+1)+((expframerank-1)*time(1,1))),'s'];
         end
         hpopLable.String=Stime; hpopLable.Value=1;
@@ -195,42 +243,104 @@ jframe.setFigureIcon(jIcon);
         haxis.Box='off';haxis.XTick=[];haxis.YTick=[];haxis.ZTick=[];haxis.XColor=[1 1 1];haxis.YColor=[1 1 1];
         axis equal
         hold on
-        if map_style==1
-            for i=1:numframes
-                line(haxis,Xworld{i},(YworldPr{i}),'Color',plotcolors(i+(expframerank-1),:),'linestyle',linestyles{i+(expframerank-1),1},'LineWidth',1)
-            end
-        elseif map_style==2
-            for i=1:numframes
-                line(haxis,Xworld{i},(YworldPr{i}),'Color',plotcolors(i+(expframerank-1),:),'LineWidth',1)
-            end
-        elseif map_style==3
-            for i=1:numframes
-                line(haxis,Xworld{i},(YworldPr{i}),'Color','k','linestyle',linestyles{i+(expframerank-1),1},'LineWidth',1)
-            end
-        elseif map_style==4
-            for i=1:numframes
-                line(haxis,Xworld{i},(YworldPr{i}),'Color','k','LineWidth',1)
-            end
-        else
-            for i=[numframes:-1:1]
-                fill(Xworld{i},YworldPr{i},plotcolors(i+(expframerank-1),:)) 
-            end
-        end
-        
-        if mapframe==1
-            for i=1:cornersnum
-                line(haxis,[XcornersWorld(i,1),XcornersWorld(i+1,1)],([YcornersWorldPr(i,1),YcornersWorldPr(i+1,1)]),'Color','k','LineWidth',2)
-            end
-        end
-        
-        if lable==1
-            if Bord==1
-                for i=1:Nlables
-                    text(Spos(i,1),Spos(i,2),Stime{i,1},'FontSize',fontSize,'Color',textColor{colorSelc,1},'BackgroundColor','w','EdgeColor','k')
+        if smooth==0 %if smoothing is OFF
+            if map_style==1
+                for k=1:Nfires
+                    for i=1:fireLastFrame(1,k)
+                        line(haxis,Xworld{k,i},(YworldPr{k,i}),'Color',plotcolors(i+(expframerank-1),:),'linestyle',linestyles{i+(expframerank-1),1},'LineWidth',1)
+                    end
+                end
+            elseif map_style==2
+                for k=1:Nfires
+                    for i=1:fireLastFrame(1,k)
+                        line(haxis,Xworld{k,i},(YworldPr{k,i}),'Color',plotcolors(i+(expframerank-1),:),'LineWidth',1)
+                    end
+                end
+            elseif map_style==3
+                for k=1:Nfires
+                    for i=1:fireLastFrame(1,k)
+                        line(haxis,Xworld{k,i},(YworldPr{k,i}),'Color','k','linestyle',linestyles{i+(expframerank-1),1},'LineWidth',1)
+                    end
+                end
+            elseif map_style==4
+                for k=1:Nfires
+                    for i=1:fireLastFrame(1,k)
+                        line(haxis,Xworld{k,i},(YworldPr{k,i}),'Color','k','LineWidth',1)
+                    end
                 end
             else
-                for i=1:Nlables
-                    text(Spos(i,1),Spos(i,2),Stime{i,1},'FontSize',fontSize,'Color',textColor{colorSelc,1})
+                for k=1:Nfires
+                    for i=[fireLastFrame(1,k):-1:1]
+                        fill(Xworld{k,i},YworldPr{k,i},plotcolors(i+(expframerank-1),:))
+                    end
+                end
+            end
+            
+            if mapframe==1
+                for i=1:cornersnum
+                    line(haxis,[XcornersWorld(i,1),XcornersWorld(i+1,1)],([YcornersWorldPr(i,1),YcornersWorldPr(i+1,1)]),'Color','k','LineWidth',2)
+                end
+            end
+            
+            if lable==1
+                if Bord==1
+                    for i=1:Nlables
+                        text(Spos(i,1),Spos(i,2),Stime{i,1},'FontSize',fontSize,'Color',textColor{colorSelc,1},'BackgroundColor','w','EdgeColor','k')
+                    end
+                else
+                    for i=1:Nlables
+                        text(Spos(i,1),Spos(i,2),Stime{i,1},'FontSize',fontSize,'Color',textColor{colorSelc,1})
+                    end
+                end
+            end
+        else %if smoothing is ON
+            if map_style==1
+                for k=1:Nfires
+                    for i=1:fireLastFrame(1,k)
+                        line(haxis,smoothX{k,i},(smoothY{k,i}),'Color',plotcolors(i+(expframerank-1),:),'linestyle',linestyles{i+(expframerank-1),1},'LineWidth',1)
+                    end
+                end
+            elseif map_style==2
+                for k=1:Nfires
+                    for i=1:fireLastFrame(1,k)
+                        line(haxis,smoothX{k,i},(smoothY{k,i}),'Color',plotcolors(i+(expframerank-1),:),'LineWidth',1)
+                    end
+                end
+            elseif map_style==3
+                for k=1:Nfires
+                    for i=1:fireLastFrame(1,k)
+                        line(haxis,smoothX{k,i},(smoothY{k,i}),'Color','k','linestyle',linestyles{i+(expframerank-1),1},'LineWidth',1)
+                    end
+                end
+            elseif map_style==4
+                for k=1:Nfires
+                    for i=1:fireLastFrame(1,k)
+                        line(haxis,smoothX{k,i},(smoothY{k,i}),'Color','k','LineWidth',1)
+                    end
+                end
+            else
+                for k=1:Nfires
+                    for i=[fireLastFrame(1,k):-1:1]
+                        fill(smoothX{k,i},smoothY{k,i},plotcolors(i+(expframerank-1),:))
+                    end
+                end
+            end
+            
+            if mapframe==1
+                for i=1:cornersnum
+                    line(haxis,[XcornersWorld(i,1),XcornersWorld(i+1,1)],([YcornersWorldPr(i,1),YcornersWorldPr(i+1,1)]),'Color','k','LineWidth',2)
+                end
+            end
+            
+            if lable==1
+                if Bord==1
+                    for i=1:Nlables
+                        text(Spos(i,1),Spos(i,2),Stime{i,1},'FontSize',fontSize,'Color',textColor{colorSelc,1},'BackgroundColor','w','EdgeColor','k')
+                    end
+                else
+                    for i=1:Nlables
+                        text(Spos(i,1),Spos(i,2),Stime{i,1},'FontSize',fontSize,'Color',textColor{colorSelc,1})
+                    end
                 end
             end
         end
@@ -242,45 +352,106 @@ jframe.setFigureIcon(jIcon);
         global mapname Spos Stime
         Bord=get(hcheckBorder,'Value'); colorSelc=get(hpopColor,'Value');
         hf2=figure('Visible','off','Position',[28,66,700,540]); haxesf=axes(hf2);
-        haxesf.Box='off';haxesf.XTick=[];haxesf.YTick=[];haxesf.ZTick=[];haxesf.XColor=[1 1 1];haxesf.YColor=[1 1 1];
-        title('Fire Front Propagation Map');
+        haxesf.Box='off';haxesf.XTick=[];haxesf.YTick=[];haxesf.ZTick=[];haxesf.XColor='none';haxesf.YColor='none';
         hold on
-        if map_style==1
-            for i=1:numframes
-                line(Xworld{i},(YworldPr{i}),'Color',plotcolors(i+(expframerank-1),:),'linestyle',linestyles{i+(expframerank-1),1},'LineWidth',1)
-            end
-        elseif map_style==2
-            for i=1:numframes
-                line(Xworld{i},(YworldPr{i}),'Color',plotcolors(i+(expframerank-1),:),'LineWidth',1)
-            end
-        elseif map_style==3
-            for i=1:numframes
-                line(Xworld{i},(YworldPr{i}),'Color','k','linestyle',linestyles{i+(expframerank-1),1},'LineWidth',1)
-            end
-        elseif map_style==4
-            for i=1:numframes
-                line(Xworld{i},(YworldPr{i}),'Color','k','LineWidth',1)
-            end
-        else
-            for i=[numframes:-1:1]
-                fill(Xworld{i},YworldPr{i},plotcolors(i+(expframerank-1),:)) 
-            end
-        end
-        
-        if mapframe==1 && shape~=4
-            for i=1:cornersnum
-                line([XcornersWorld(i,1),XcornersWorld(i+1,1)],([YcornersWorldPr(i,1),YcornersWorldPr(i+1,1)]),'Color','k','LineWidth',2)
-            end
-        end
-        
-        if lable==1
-            if Bord==1
-                for i=1:Nlables
-                    text(Spos(i,1),Spos(i,2),Stime{i,1},'FontSize',fontSize,'Color',textColor{colorSelc,1},'BackgroundColor','w','EdgeColor','k')
+        if smooth==0 %if smoothing is OFF
+            if map_style==1
+                for k=1:Nfires
+                    for i=1:fireLastFrame(1,k)
+                        line(haxesf,Xworld{k,i},(YworldPr{k,i}),'Color',plotcolors(i+(expframerank-1),:),'linestyle',linestyles{i+(expframerank-1),1},'LineWidth',1)
+                    end
+                end
+            elseif map_style==2
+                for k=1:Nfires
+                    for i=1:fireLastFrame(1,k)
+                        line(haxesf,Xworld{k,i},(YworldPr{k,i}),'Color',plotcolors(i+(expframerank-1),:),'LineWidth',1)
+                    end
+                end
+            elseif map_style==3
+                for k=1:Nfires
+                    for i=1:fireLastFrame(1,k)
+                        line(haxesf,Xworld{k,i},(YworldPr{k,i}),'Color','k','linestyle',linestyles{i+(expframerank-1),1},'LineWidth',1)
+                    end
+                end
+            elseif map_style==4
+                for k=1:Nfires
+                    for i=1:fireLastFrame(1,k)
+                        line(haxesf,Xworld{k,i},(YworldPr{k,i}),'Color','k','LineWidth',1)
+                    end
                 end
             else
-                for i=1:Nlables
-                    text(Spos(i,1),Spos(i,2),Stime{i,1},'FontSize',fontSize,'Color',textColor{colorSelc,1})
+                for k=1:Nfires
+                    for i=[fireLastFrame(1,k):-1:1]
+                        fill(Xworld{k,i},YworldPr{k,i},plotcolors(i+(expframerank-1),:))
+                    end
+                end
+            end
+            
+            if mapframe==1
+                for i=1:cornersnum
+                    line(haxesf,[XcornersWorld(i,1),XcornersWorld(i+1,1)],([YcornersWorldPr(i,1),YcornersWorldPr(i+1,1)]),'Color','k','LineWidth',2)
+                end
+            end
+            
+            if lable==1
+                if Bord==1
+                    for i=1:Nlables
+                        text(Spos(i,1),Spos(i,2),Stime{i,1},'FontSize',fontSize,'Color',textColor{colorSelc,1},'BackgroundColor','w','EdgeColor','k')
+                    end
+                else
+                    for i=1:Nlables
+                        text(Spos(i,1),Spos(i,2),Stime{i,1},'FontSize',fontSize,'Color',textColor{colorSelc,1})
+                    end
+                end
+            end
+        else %if smoothing is ON
+            if map_style==1
+                for k=1:Nfires
+                    for i=1:fireLastFrame(1,k)
+                        line(haxesf,smoothX{k,i},(smoothY{k,i}),'Color',plotcolors(i+(expframerank-1),:),'linestyle',linestyles{i+(expframerank-1),1},'LineWidth',1)
+                    end
+                end
+            elseif map_style==2
+                for k=1:Nfires
+                    for i=1:fireLastFrame(1,k)
+                        line(haxesf,smoothX{k,i},(smoothY{k,i}),'Color',plotcolors(i+(expframerank-1),:),'LineWidth',1)
+                    end
+                end
+            elseif map_style==3
+                for k=1:Nfires
+                    for i=1:fireLastFrame(1,k)
+                        line(haxesf,smoothX{k,i},(smoothY{k,i}),'Color','k','linestyle',linestyles{i+(expframerank-1),1},'LineWidth',1)
+                    end
+                end
+            elseif map_style==4
+                for k=1:Nfires
+                    for i=1:fireLastFrame(1,k)
+                        line(haxesf,smoothX{k,i},(smoothY{k,i}),'Color','k','LineWidth',1)
+                    end
+                end
+            else
+                for k=1:Nfires
+                    for i=[fireLastFrame(1,k):-1:1]
+                        fill(smoothX{k,i},smoothY{k,i},plotcolors(i+(expframerank-1),:))
+                    end
+                end
+            end
+            
+            if mapframe==1
+                for z=1:cornersnum
+                    line(haxesf,[XcornersWorld(z,1),XcornersWorld(z+1,1)],([YcornersWorldPr(z,1),YcornersWorldPr(z+1,1)]),'Color','k','LineWidth',2)
+                end
+            end
+            
+            if lable==1
+                if Bord==1
+                    for i=1:Nlables
+                        text(Spos(i,1),Spos(i,2),Stime{i,1},'FontSize',fontSize,'Color',textColor{colorSelc,1},'BackgroundColor','w','EdgeColor','k')
+                    end
+                else
+                    for i=1:Nlables
+                        text(Spos(i,1),Spos(i,2),Stime{i,1},'FontSize',fontSize,'Color',textColor{colorSelc,1})
+                    end
                 end
             end
         end

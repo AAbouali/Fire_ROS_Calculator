@@ -1,7 +1,7 @@
 function saveFrames
-global startTime interval endTime  Savefolder hwait videoObject vidHeight
+global startTime interval endTime  Savefolder hwait videoObject vidHeight frame
 
-FrameRate = videoObject.FrameRate;
+FrameRate = round(videoObject.FrameRate);
 vidDuration = videoObject.Duration;
 
 startTimeSec=startTime(1,1)*60+startTime(1,2);

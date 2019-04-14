@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="3899912781" file="C:\Program Files\MATLAB\R2018a\bin\ROS\Fire_ROS_Calculator.prj" location="C:\Program Files\MATLAB\R2018a\bin\ROS" name="Fire_ROS_Calculator" preferred-package-location="C:\Program Files\MATLAB\R2018a\bin\ROS\Fire_ROS_Calculator\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="193736081" file="C:\Program Files\MATLAB\R2018a\bin\ROS\Fire_ROS_Calculator.prj" location="C:\Program Files\MATLAB\R2018a\bin\ROS" name="Fire_ROS_Calculator" preferred-package-location="C:\Program Files\MATLAB\R2018a\bin\ROS\Fire_ROS_Calculator\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>Fire_ROS_Calculator</param.appname>
     <param.icon>${PROJECT_ROOT}\Fire_ROS_Calculator_resources\icon.ico</param.icon>
     <param.icons>
@@ -8,7 +8,7 @@
       <file>${PROJECT_ROOT}\Fire_ROS_Calculator_resources\icon_24.png</file>
       <file>${PROJECT_ROOT}\Fire_ROS_Calculator_resources\icon_16.png</file>
     </param.icons>
-    <param.version>2.1</param.version>
+    <param.version>2.5</param.version>
     <param.authnamewatermark>Abdelrahman Abouali</param.authnamewatermark>
     <param.email>abouali@adai.pt</param.email>
     <param.company>ADAI-CEIF</param.company>
@@ -31,11 +31,11 @@ This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAl
     <param.user.defined.mcr.options />
     <param.target.type>subtarget.standalone</param.target.type>
     <param.support.packages />
-    <param.web.mcr>true</param.web.mcr>
-    <param.package.mcr>false</param.package.mcr>
+    <param.web.mcr>false</param.web.mcr>
+    <param.package.mcr>true</param.package.mcr>
     <param.no.mcr>false</param.no.mcr>
-    <param.web.mcr.name>Fire_ROS_Calculator_web_v2.1</param.web.mcr.name>
-    <param.package.mcr.name>Fire_ROS_Calculator_inc2_1</param.package.mcr.name>
+    <param.web.mcr.name>Fire_ROS_Calculator_web_v2_5</param.web.mcr.name>
+    <param.package.mcr.name>Fire_ROS_Calculator_inc_v2_5</param.package.mcr.name>
     <param.no.mcr.name>MyAppInstaller_app</param.no.mcr.name>
     <param.windows.command.prompt>true</param.windows.command.prompt>
     <param.create.log>true</param.create.log>
@@ -57,8 +57,6 @@ This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAl
       <param.user.defined.mcr.options />
       <param.target.type />
       <param.support.packages />
-      <param.web.mcr />
-      <param.package.mcr />
       <param.no.mcr />
       <param.no.mcr.name />
       <param.windows.command.prompt />
@@ -82,7 +80,6 @@ This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAl
     <fileset.depfun>
       <file>${PROJECT_ROOT}\auto_detect.m</file>
       <file>${PROJECT_ROOT}\average_ROS.m</file>
-      <file>${PROJECT_ROOT}\build_isoROS.m</file>
       <file>${PROJECT_ROOT}\build_prop_map.m</file>
       <file>${PROJECT_ROOT}\check_accuracy.m</file>
       <file>${PROJECT_ROOT}\check_accuracy2.m</file>

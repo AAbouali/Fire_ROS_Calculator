@@ -1,6 +1,6 @@
 function man_detect
 global XcornersWorld YcornersWorld answer_rep ffpoints fflineeq time R t cameraParams Xworld Yworld X Y squareSize bwporig numframes framefiles checkf calibrationFile
-global Xcorners Ycorners project_name shape cornersnum localtime resultsfolder results imagesUsed drawfront repeatF images resultrow AngleWorld Lworld frame_corr frame
+global Xcorners Ycorners project_name shape cornersnum localtime resultsfolder results imagesUsed drawfront repeatF images resultrow AngleWorld Lworld frame_corr frame Nfires fireLastFrame
 %% Detect the fire front on each frame
 if drawfront==1
     namedrawfront=[project_name ' DFF'];folder=fullfile(resultsfolder,namedrawfront);
@@ -8,7 +8,8 @@ if drawfront==1
         mkdir(folder)
     end
 end
-
+Nfires=1;
+fireLastFrame=numframes;
 ffpoints=100; %number of points that will present the fire front as set of straight lines that connecting these points
 % ffpoints can be increased if the used is going to detect the fire front
 % by nore than 150 lines (which is very hard to happen)
@@ -106,10 +107,13 @@ end
 
 %determining the fire front lines equations
 fflineeq=cell(1,numframes);
+burndarea=cell(Nfires,numframes);
 for i=1:numframes
     for j=1:ffpoints-1
         fflineeq{i}(j,:) = polyfit([Xworld{i}(j,1) Xworld{i}(j+1,1)],[Yworld{i}(j,1) Yworld{i}(j+1,1)],1);
     end
+    %determining the area burned on each frame
+    burndarea{1,i}=(polyarea(Xworld{1,i},Yworld{1,i}))*10^-6;
 end
 
 save([resultsfolder,'\',project_name],'XcornersWorld', 'YcornersWorld', 'ffpoints', 'fflineeq', 'time', 'R', 't', 'cameraParams', 'Xworld', 'Yworld', 'X', 'Y',...
@@ -118,4 +122,15 @@ save([resultsfolder,'\',project_name],'XcornersWorld', 'YcornersWorld', 'ffpoint
 results{1,1}='Session Name: '; results{1,2}=project_name;
 results{2,1}='Number of images used on the calibraion is: ';results{2,2}=[num2str(length(imagesUsed(imagesUsed==1))),' from ',num2str(size(images,2))];
 results{3,1}='Number of fire front frames is:'; results{3,2}=numframes;
+results{5,1}='Area Burned on each frame'; results{6,1}='frame';
+for i=1:numframes
+    results{6,1+i}=num2str(i);
+end
+results{7,1}=sprintf('Fire%d Area (m^2)',1);
+for i=1:fireLastFrame(1,k)
+    results{7,1+i}= num2str(burndarea{1,i});
+end
+resultrow=8+Nfires;
+save([resultsfolder,'\',project_name],'XcornersWorld', 'YcornersWorld', 'ffpoints', 'fflineeq', 'time', 'R', 't', 'cameraParams', 'Xworld', 'Yworld', 'X', 'Y',...
+    'numframes', 'Xcorners', 'Ycorners', 'shape', 'cornersnum', 'Nfires', 'fireLastFrame', 'results', 'resultrow' )
 end

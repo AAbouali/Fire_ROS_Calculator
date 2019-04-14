@@ -1,6 +1,6 @@
 function evaluate_frames
 global numframes cornersnum Xworld Yworld appPath BI MaskROI Bnd hL editMode hArea project_name resultsfolder
-global R t cameraParams X Y Xcorners Ycorners frames frame Fselection fflineeq drawfront MainF
+global R t cameraParams X Y Xcorners Ycorners frames frame Fselection fflineeq drawfront MainF Nfires fireLastFrame
 %% building the GUI
 f = figure('Visible','off','Position',[680,215,800,500],'CloseRequestFcn',@f_CloseRequestFcn);
 panel=uipanel(f,'Position',[0,0,1,1]);
@@ -9,19 +9,23 @@ htextFrame  = uicontrol(panel,'Style','text','String','Select Frame:',...
 hpopFrame  = uicontrol(panel,'Style','pop','Units','normalized','FontSize',10,...
     'Position',[0.78,0.77,0.173,0.056],'String',frames,'callback',{@popFrame_Callback});
 hbgEdit  = uibuttongroup(panel,'Units','pixels','Title','Modify Fire Front','FontSize',10,...
-    'Units','normalized','Position',[0.762 0.157 0.21 0.493],'SelectionChangedFcn',@selectionMode);
+    'Units','normalized','Position',[0.762 0.157 0.21 0.6],'SelectionChangedFcn',@selectionMode);
 hMTool   = uicontrol(hbgEdit,'Style','pushbutton','String','Modify Tool','Units','normalized',...
-    'Position',[0.075,0.78,0.87,0.15],'FontSize',10,'callback',{@MTool_Callback});
+    'Position',[0.075,0.82,0.87,0.15],'FontSize',10,'callback',{@MTool_Callback});
 htextMode  = uicontrol(hbgEdit,'Style','text','String','Mode:',...
-    'FontSize',11,'Units','normalized','Position',[0.11,0.65,0.317,0.075]);
+    'FontSize',11,'Units','normalized','Position',[0.11,0.71,0.317,0.075]);
 hradioAdd    = uicontrol(hbgEdit  ,'Style','radiobutton','String','Add','Units','normalized',...
-    'Position',[0.124 0.53 0.627 0.115],'FontSize',11,'Enable','off');
+    'Position',[0.124 0.61 0.627 0.115],'FontSize',11,'Enable','off');
 hradioRemove    = uicontrol(hbgEdit  ,'Style','radiobutton','String','Remove','Units','normalized',...
-    'Position',[0.124 0.43 0.627 0.115],'FontSize',11,'Enable','off');
+    'Position',[0.124 0.53 0.627 0.115],'FontSize',11,'Enable','off');
+htextFire  = uicontrol(hbgEdit,'Style','text','String','Fire No:',...
+    'FontSize',11,'Units','normalized','Position',[0.06,0.45,0.5,0.075]);
+hpopFire  = uicontrol(panel,'Style','pop','Units','normalized','FontSize',10,...
+    'Position',[0.78,0.35,0.173,0.056],'String',num2cell(1:Nfires),'callback',{@popFire_Callback});
 hcheckApply = uicontrol(hbgEdit,'Style','checkbox','String','Apply for next frames','Units','normalized',...
-    'FontSize',9.5,'Value',0,'Position',[0.05 0.20 0.95 0.25]);
+    'FontSize',9.5,'Value',0,'Position',[0.05 0.15 0.95 0.25]);
 hApply   = uicontrol(hbgEdit,'Style','pushbutton','String','Apply','Units','normalized',...
-    'Position',[0.199,0.03,0.627,0.195],'FontSize',11,'FontWeight','bold','callback',{@Apply_Callback});
+    'Position',[0.199,0.02,0.627,0.17],'FontSize',11,'FontWeight','bold','callback',{@Apply_Callback});
 haxis       = axes(panel,'box','off','xtick',[],'ytick',[],'ztick',[],'xcolor',[1 1 1],'ycolor',[1 1 1],...
     'Position',[0.03,0.1,0.70,0.8],'color','white');
 
@@ -30,27 +34,37 @@ movegui(f,'center')
 f.MenuBar = 'none';
 f.ToolBar = 'none';
 f.NumberTitle='off';
-f.Visible = 'on';
+
 
 warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
 jframe=get(f,'javaframe');
 jIcon=javax.swing.ImageIcon(fullfile(appPath,'icon ROS.gif'));
 jframe.setFigureIcon(jIcon);
+f.Visible = 'on';
 changefFrames=[]; q=1; edit=0;
-editMode=1; allFrames=0;
+editMode=1; allFrames=0; fireToEditNo=1;
 %% callbacks
     function popFrame_Callback(src,event)
-        global him
+        global him handles
         Fselection=get(hpopFrame,'Value');
         him=image(haxis,frame{Fselection});
         haxis.Box='off';haxis.XTick=[];haxis.YTick=[];haxis.ZTick=[];haxis.XColor=[1 1 1];haxis.YColor=[1 1 1];
         hold on
-        hL=line(X{Fselection},Y{Fselection},'Color','g','LineWidth',1.2);
-        if Fselection>1
-           line(X{Fselection-1},Y{Fselection-1},'Color','w','LineWidth',1.2);
+        for k=1:Nfires
+            if Fselection<=fireLastFrame(1,k)
+                handles.hL{k}=line(X{k,Fselection},Y{k,Fselection},'Color','g','LineWidth',1.2);
+            end
+            if Fselection>1 && Fselection<=fireLastFrame(1,k)+1
+                line(X{k,Fselection-1},Y{k,Fselection-1},'Color','w','LineWidth',1.2);
+            end
         end
         for j=1:cornersnum
             line([Xcorners(j,1),Xcorners(j+1,1)],([Ycorners(j,1),Ycorners(j+1,1)]),'Color','b','LineWidth',2)
+        end
+        for k=1:Nfires
+            if Fselection<=fireLastFrame(1,k)
+            text(X{k,1}(randi([1 size(X{k,1},1)],1,1),1),Y{k,1}(randi([1 size(Y{k,1},1)],1,1),1),sprintf('Fire%d',k),'FontSize',10,'Color','k','BackgroundColor','w','EdgeColor','k')
+            end
         end
     end
     function MTool_Callback(src,event)
@@ -66,8 +80,11 @@ editMode=1; allFrames=0;
             editMode=2;
         end
     end
+    function popFire_Callback(src,event)
+        fireToEditNo=get(hpopFire,'Value');
+    end
     function Apply_Callback(src,event)
-        global him
+        global him handles
         edit=1;
         allFrames=get(hcheckApply,'Value');
         set(f, 'pointer', 'watch'); drawnow;
@@ -78,24 +95,26 @@ editMode=1; allFrames=0;
             BI{Fselection}(Mask == 1) = 0;
         end
         BI{Fselection}(MaskROI == 0) = 0;
-        [Bnd{Fselection},L,N] = bwboundaries(BI{Fselection},'noholes',8);
-        if N>1
-            SizeN=zeros(1,N);
-            for k=1:N
-                SizeN(1,k)=size(Bnd{Fselection}{k},1);
-            end
-            Bnd{Fselection}{1}=Bnd{Fselection}{find(SizeN==max(SizeN))};
+        [Bn,~,N] = bwboundaries(BI{Fselection},'noholes',8);
+        
+        
+        SizeDetFires=zeros(1,N);
+        for s=1:N
+            %SizeDetFires(1,s)=numel(Bn{s,1});
+            SizeDetFires(1,s)=polyarea(Bn{s}(:,2), Bn{s}(:,1));
         end
-        X{Fselection}=Bnd{Fselection}{1}(:,2);
-        Y{Fselection}=Bnd{Fselection}{1}(:,1);
+        [~,order]=sort(SizeDetFires,'descend');
+        Bnd=Bn{order(1,fireToEditNo)};
+        X{fireToEditNo,Fselection}=Bnd(:,2);
+        Y{fireToEditNo,Fselection}=Bnd(:,1);
         imagePoints=[];
-        imagePoints(:,1)=X{Fselection}(:,1);
-        imagePoints(:,2)=Y{Fselection}(:,1);
+        imagePoints(:,1)=X{fireToEditNo,Fselection}(:,1);
+        imagePoints(:,2)=Y{fireToEditNo,Fselection}(:,1);
         worldPoints = pointsToWorld(cameraParams, R, t, imagePoints);
-        Xworld{Fselection}=worldPoints(:,1);
-        Yworld{Fselection}=worldPoints(:,2);
-        for j=1:size(Xworld{Fselection},1)-1
-            fflineeq{Fselection}(j,:) = polyfit([Xworld{Fselection}(j,1) Xworld{Fselection}(j+1,1)],[Yworld{Fselection}(j,1) Yworld{Fselection}(j+1,1)],1);
+        Xworld{fireToEditNo,Fselection}=worldPoints(:,1);
+        Yworld{fireToEditNo,Fselection}=worldPoints(:,2);
+        for j=1:size(Xworld{fireToEditNo,Fselection},1)-1
+            fflineeq{Fselection}(j,:) = polyfit([Xworld{fireToEditNo,Fselection}(j,1) Xworld{fireToEditNo,Fselection}(j+1,1)],[Yworld{fireToEditNo,Fselection}(j,1) Yworld{fireToEditNo,Fselection}(j+1,1)],1);
         end
         if any(changefFrames==Fselection)==0
             changefFrames(1,q)=Fselection; q=q+1;
@@ -108,32 +127,32 @@ editMode=1; allFrames=0;
                     BI{i}(Mask == 1) = 0;
                 end
                 BI{i}(MaskROI == 0) = 0;
-                [Bnd{i},L,N] = bwboundaries(BI{i},'noholes',8);
-                if N>1
-                    SizeN=zeros(1,N);
-                    for k=1:N
-                        SizeN(1,k)=size(Bnd{i}{k},1);
-                    end
-                    Bnd{i}{1}=Bnd{i}{find(SizeN==max(SizeN))};
+                [Bnd{i},~,N] = bwboundaries(BI{i},'noholes',8);
+                SizeDetFires=zeros(1,N);
+                for s=1:N
+                    %SizeDetFires(1,s)=numel(Bn{s,1});
+                    SizeDetFires(1,s)=polyarea(Bn{s}(:,2), Bn{s}(:,1));
                 end
-                X{i}=Bnd{i}{1}(:,2);
-                Y{i}=Bnd{i}{1}(:,1);
+                [~,order]=sort(SizeDetFires,'descend');
+                Bnd=Bn{order(1,fireToEditNo)};
+                X{fireToEditNo,i}=Bnd(:,2);
+                Y{fireToEditNo,i}=Bnd(:,1);
                 imagePoints=[];
-                imagePoints(:,1)=X{i}(:,1);
-                imagePoints(:,2)=Y{i}(:,1);
+                imagePoints(:,1)=X{fireToEditNo,i}(:,1);
+                imagePoints(:,2)=Y{fireToEditNo,i}(:,1);
                 worldPoints = pointsToWorld(cameraParams, R, t, imagePoints);
-                Xworld{i}=worldPoints(:,1);
-                Yworld{i}=worldPoints(:,2);
-                for j=1:size(Xworld{i},1)-1
-                    fflineeq{i}(j,:) = polyfit([Xworld{i}(j,1) Xworld{i}(j+1,1)],[Yworld{i}(j,1) Yworld{i}(j+1,1)],1);
+                Xworld{fireToEditNo,i}=worldPoints(:,1);
+                Yworld{fireToEditNo,i}=worldPoints(:,2);
+                for j=1:size(Xworld{fireToEditNo,i},1)-1
+                    fflineeq{i}(j,:) = polyfit([Xworld{fireToEditNo,i}(j,1) Xworld{fireToEditNo,i}(j+1,1)],[Yworld{fireToEditNo,i}(j,1) Yworld{fireToEditNo,i}(j+1,1)],1);
                 end
                 if any(changefFrames==i)==0
                     changefFrames(1,q)=i; q=q+1;
                 end
             end
         end
-        delete(hL)
-        hL=line(X{Fselection},Y{Fselection},'Color','g','LineWidth',1.2);
+        delete(handles.hL{fireToEditNo})
+        handles.hL{fireToEditNo}=line(X{fireToEditNo,Fselection},Y{fireToEditNo,Fselection},'Color','g','LineWidth',1.2);
         set(f, 'pointer', 'arrow'); drawnow;
     end
 % To save the updated locations of the fire fronts on the saved session
@@ -144,19 +163,20 @@ editMode=1; allFrames=0;
         if edit==1
             save([resultsfolder,'\',project_name], 'fflineeq', 'Xworld', 'Yworld', 'X', 'Y','-append')
             if drawfront==1
-                namedrawfront=[project_name ' DFF'];
                 fff = figure('visible','off'); haxesff=axes(fff);
-                for i=changefFrames
+                for i=1:numframes
                     image(haxesff,frame{i});
                     hold on
-                    for j=1:i
-                        line(haxesff,X{j}(:,1),Y{j}(:,1),'Color','g','LineWidth',1.2)
+                    for k=1:Nfires
+                        for j=1:fireLastFrame(1,k)
+                            line(haxesff,X{k,j}(:,1),Y{k,j}(:,1),'Color','g','LineWidth',1.2)
+                        end
                     end
                     for j=1:cornersnum
                         line(haxesff,[Xcorners(j,1),Xcorners(j+1,1)],([Ycorners(j,1),Ycorners(j+1,1)]),'Color','b','LineWidth',2)
                     end
-                    haxesff.Box='off';haxesff.XTick=[];haxesff.YTick=[];haxesff.ZTick=[];haxesff.XColor=[1 1 1];haxesff.YColor=[1 1 1];haxesff.Position=[0 0 1 1];
                     hold off
+                    haxesff.Box='off';haxesff.XTick=[];haxesff.YTick=[];haxesff.ZTick=[];haxesff.XColor=[1 1 1];haxesff.YColor=[1 1 1];haxesff.Position=[0 0 1 1];
                     FileName = sprintf([namedrawfront,'%d.png'], i);
                     frontFrame = getframe(haxesff);
                     frontIamge = frame2im(frontFrame);
@@ -164,7 +184,7 @@ editMode=1; allFrames=0;
                     imwrite(frontIamge,[resultsfolder,'\',namedrawfront,'\',FileName],'png')
                     %print(ff, '-r110', '-dpng', [resultsfolder,'\',namedrawfront,'\',FileName]);
                 end
-                delete(fff)
+                close(fff)
             end
         end
         set(MainF, 'pointer', 'arrow'); drawnow;

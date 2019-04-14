@@ -53,7 +53,7 @@ if shape==2
     %The third point
     %s=atan(-((XcornersWorld(2,1)-XcornersWorld(1,1))/(YcornersWorld(2,1)-XcornersWorld(1,1)))) ;
     s=atan2((YcornersWorld(2,1)-YcornersWorld(1,1)),(XcornersWorld(2,1)-XcornersWorld(1,1)))+pi ;
-    Angle=s+degtorad(AngleWorld);
+    Angle=s+deg2rad(AngleWorld);
     XcornersWorld(3,1)=Lworld*cos(Angle)+XcornersWorld(2,1);
     YcornersWorld(3,1)=Lworld*sin(Angle)+YcornersWorld(2,1);
     imagePoint= worldToPoints(cameraParams, R, t, [XcornersWorld(3,1),YcornersWorld(3,1)]);
@@ -79,17 +79,18 @@ elseif shape==1
         YcornersWorld(i,1)=worldPoint(1,2);
     end
     %correcting the length of the detected edge according to the entered length
-    CCLworld=sqrt((XcornersWorld(1,1)-XcornersWorld(2,1))^2+(YcornersWorld(1,1)-YcornersWorld(2,1))^2);
-    Ldiff=CLworld-CCLworld;
-    newX(1,1)=XcornersWorld(2,1)+(XcornersWorld(2,1)-XcornersWorld(1,1))/CCLworld*Ldiff;
-    newY(1,1)=YcornersWorld(2,1)+(YcornersWorld(2,1)-YcornersWorld(1,1))/CCLworld*Ldiff;
-    newX(1,2)=XcornersWorld(1,1)-(XcornersWorld(2,1)-XcornersWorld(1,1))/CCLworld*Ldiff;
-    newY(1,2)=YcornersWorld(1,1)-(YcornersWorld(2,1)-YcornersWorld(1,1))/CCLworld*Ldiff;
-    XcornersWorld(1,1)=newX(1,1);XcornersWorld(2,1)=newX(1,2);YcornersWorld(1,1)=newY(1,1);YcornersWorld(2,1)=newY(1,2);
-    imagePoint= worldToPoints(cameraParams, R, t, [XcornersWorld(1,1),YcornersWorld(1,1)]);
-    Xcorners(1,1)= imagePoint(1,1); Ycorners(1,1)= imagePoint(1,2);
-    imagePoint= worldToPoints(cameraParams, R, t, [XcornersWorld(2,1),YcornersWorld(2,1)]);
-    Xcorners(2,1)= imagePoint(1,1); Ycorners(2,1)= imagePoint(1,2);
+    %CCLworld=sqrt((XcornersWorld(1,1)-XcornersWorld(2,1))^2+(YcornersWorld(1,1)-YcornersWorld(2,1))^2);
+    %Ldiff=CLworld-CCLworld;
+    %newX(1,1)=XcornersWorld(2,1)+(XcornersWorld(2,1)-XcornersWorld(1,1))/CCLworld*Ldiff;
+    %newY(1,1)=YcornersWorld(2,1)+(YcornersWorld(2,1)-YcornersWorld(1,1))/CCLworld*Ldiff;
+    %newX(1,2)=XcornersWorld(1,1)-(XcornersWorld(2,1)-XcornersWorld(1,1))/CCLworld*Ldiff;
+    %newY(1,2)=YcornersWorld(1,1)-(YcornersWorld(2,1)-YcornersWorld(1,1))/CCLworld*Ldiff;
+    %XcornersWorld(1,1)=newX(1,1);XcornersWorld(2,1)=newX(1,2);YcornersWorld(1,1)=newY(1,1);YcornersWorld(2,1)=newY(1,2);
+    %imagePoint= worldToPoints(cameraParams, R, t, [XcornersWorld(1,1),YcornersWorld(1,1)]);
+    %Xcorners(1,1)= imagePoint(1,1); Ycorners(1,1)= imagePoint(1,2);
+    %imagePoint= worldToPoints(cameraParams, R, t, [XcornersWorld(2,1),YcornersWorld(2,1)]);
+    %Xcorners(2,1)= imagePoint(1,1); Ycorners(2,1)= imagePoint(1,2);
+    
     %the other two points 
     s=atan2((YcornersWorld(2,1)-YcornersWorld(1,1)),(XcornersWorld(2,1)-XcornersWorld(1,1)))+pi ;
     Angle=s+(pi/2);

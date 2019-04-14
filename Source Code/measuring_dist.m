@@ -1,6 +1,6 @@
 function measuring_dist
-global Xworld Yworld numframes shape XcornersWorld YcornersWorld cornersnum resultsfolder results resultrow  R t cameraParams
-global dist_name DistImage handles time ffpoints fflineeq loudstatuse workpathname work X Y Xcorners Ycorners appPath pathname
+global Xworld Yworld numframes shape XcornersWorld YcornersWorld cornersnum resultsfolder results resultrow  R t cameraParams fireLastFrame
+global dist_name DistImage handles time ffpoints fflineeq loudstatuse workpathname work X Y Xcorners Ycorners appPath pathname Nfires
 if loudstatuse==1
     load([workpathname,work])
 end
@@ -31,8 +31,10 @@ m1 = uimenu(c,'Label','Add Lines','Callback',@drawLines);
 handles.frameLines = zeros(cornersnum,1);
 handles.frontLines = zeros(numframes,1);
 hold on
-for i=1:numframes
-    handles.frontLines(i)=line(Xworld{i},(Yworld{i}),'Color','r');
+for k=1:Nfires
+    for i=1:fireLastFrame(1,k)
+        line(Xworld{k,i},Yworld{k,i},'Color','r','LineWidth',1);
+    end
 end
 if shape~=4
     for i=1:cornersnum
@@ -46,12 +48,13 @@ movegui(f,'center')
 f.MenuBar = 'none';
 f.ToolBar = 'none';
 f.NumberTitle='off';
-f.Visible = 'on';
+
 
 warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
 jframe=get(f,'javaframe');
 jIcon=javax.swing.ImageIcon(fullfile(appPath,'icon ROS.gif'));
 jframe.setFigureIcon(jIcon);
+f.Visible = 'on';
 %% interactive controls
 numdis=1;
 image_source=1;
@@ -64,12 +67,14 @@ image_source=1;
             haxis.Box='off';haxis.XTick=[];haxis.YTick=[];haxis.ZTick=[];haxis.XColor=[1 1 1];haxis.YColor=[1 1 1];
             axis equal
             hold on
-            for i=1:numframes
-                handles.frontLines(i)=line(Xworld{i},(Yworld{i}),'Color','r');
+            for k=1:Nfires
+                for i=1:fireLastFrame(1,k)
+                    line(Xworld{k,i},Yworld{k,i},'Color','r','LineWidth',1);
+                end
             end
             if shape~=4
                 for i=1:cornersnum
-                    handles.frameLines(i)=line(haxis,[XcornersWorld(i,1),XcornersWorld(i+1,1)],([YcornersWorld(i,1),YcornersWorld(i+1,1)]),'Color','b','LineWidth',2);
+                    line(haxis,[XcornersWorld(i,1),XcornersWorld(i+1,1)],([YcornersWorld(i,1),YcornersWorld(i+1,1)]),'Color','b','LineWidth',2);
                 end
             end
             hold off
@@ -140,11 +145,13 @@ image_source=1;
                 hFigResult=figure('Visible','off');
                 title('Postion of the measured distance');
                 hold on
-                for i=1:numframes
-                    line(Xworld(:,i),(Yworld(:,i)),'Color','r')
+                for k=1:Nfires
+                    for i=1:fireLastFrame(1,k)
+                        line(Xworld{k,i},Yworld{k,i},'Color','r','LineWidth',1);
+                    end
                 end
                 for i=1:numdis
-                line([posline{1,i}(1,1),posline{1,i}(2,1)],[posline{1,i}(1,2),posline{1,i}(2,2)],'Color','g','LineWidth',2);
+                    line([posline{1,i}(1,1),posline{1,i}(2,1)],[posline{1,i}(1,2),posline{1,i}(2,2)],'Color','g','LineWidth',2);
                 end
                 if shape~=4
                     for i=1:cornersnum
@@ -180,7 +187,7 @@ image_source=1;
         resultrow=resultrow+1;
         results(resultrow,1:size(MeasuredDist,2))=num2cell(MeasuredDist);
         resultrow=resultrow+2;
-        set(heditResult,'String',[num2str(round(mean(MeasuredDist))),' mm']);
+        set(heditResult,'String',[num2str(round(mean(MeasuredDist))/10),' cm']);
     end
 
 end

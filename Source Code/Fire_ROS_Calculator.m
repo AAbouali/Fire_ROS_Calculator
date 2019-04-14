@@ -9,7 +9,8 @@
 %%
 function Fire_ROS_Calculator
 global Xcorners Ycorners pathname calibrationFile numframes framefiles bwporig TimeSelection shape localtime results resultrow resultsfolder frames appPath checkimage videoObject
-global drawfront project_name cornersnum MainF images squareSize imagesUsed workpathname work loudstatuse AngleWorld Lworld CLworld cameraParams calibList hwait man_mod interval errors 
+global drawfront project_name cornersnum MainF images squareSize imagesUsed workpathname work loudstatuse AngleWorld Lworld CLworld cameraParams calibList hwait man_mod interval errors
+global XcornersWorld YcornersWorld ffpoints fflineeq time R t Xworld Yworld X Y Nfires fireLastFrame
 %% read files 
 if isdeployed && ispc
     [~, result] = system('path');
@@ -38,7 +39,7 @@ end
 list = what(calibPath); calibList=list.mat; calibList{end+1,1}=('Load Calibration'); calibList=calibList';
 
 %% building the GUI
-MainF = figure('Visible','off','Position',[680,93,800,580],'CloseRequestFcn',@MainF_CloseRequestFcn);
+MainF = figure('Visible','off','Position',[680,93,800,600],'CloseRequestFcn',@MainF_CloseRequestFcn);
 htgroup = uitabgroup('Parent', MainF );
 htabNew = uitab('Parent', htgroup,'Title', '   New Session   ');
 htabLoad = uitab('Parent', htgroup, 'Title', '   Load Session   ');
@@ -47,41 +48,41 @@ htabExtract = uitab('Parent', htgroup, 'Title', '   Extract Frames   ');
 htabEvaluate = uitab('Parent', htgroup, 'Title', '  Camera Calibration  ');
 % first tab (New Project)
 % Inputs panel (left)
-hpanelInput=uipanel(htabNew,'Units','pixels','Title','Inputs','FontSize',10,'Position',[0,0,450,595]);
+hpanelInput=uipanel(htabNew,'Units','pixels','Title','Inputs','FontSize',10,'Position',[0,0,450,615]);
 htextPname  = uicontrol(hpanelInput,'Style','text','String','Session Name:',...
-    'FontSize',11,'FontWeight','bold','Position',[80,535,115,25]);
-heditPname  = uicontrol(hpanelInput,'Style','edit','Position',[198,535,180,25],'FontSize',10,'FontWeight','bold');
+    'FontSize',11,'FontWeight','bold','Position',[80,555,115,25]);
+heditPname  = uicontrol(hpanelInput,'Style','edit','Position',[198,555,180,25],'FontSize',10,'FontWeight','bold');
 htextIcalib  = uicontrol(hpanelInput,'Style','text','String','Camera Parameters:',...
-    'FontSize',11,'Position',[13,485,140,24]);
+    'FontSize',11,'Position',[13,505,140,24]);
 hpopCalib  = uicontrol(hpanelInput,'Style','pop','Units','pixels','String',calibList,...
-    'value',size(calibList,2),'FontSize',10,'Position',[155,485,150,25],'callback',{@popCalib_Callback});
+    'value',size(calibList,2),'FontSize',10,'Position',[155,505,150,25],'callback',{@popCalib_Callback});
 hbuttonIcalib  = uicontrol(hpanelInput,'Style','pushbutton','String','Load Camera P.','FontSize',10,...
-    'Position',[315,485,115,25],'callback',{@buttonIcalib_Callback});
+    'Position',[315,505,115,25],'callback',{@buttonIcalib_Callback});
 htextIframes  = uicontrol(hpanelInput,'Style','text','String','  Fire Front Images:',...
-    'FontSize',11,'Position',[13,450,140,24]);
-heditIframes  = uicontrol(hpanelInput,'Style','edit','Position',[155,450,180,25],'FontSize',10);
+    'FontSize',11,'Position',[13,470,140,24]);
+heditIframes  = uicontrol(hpanelInput,'Style','edit','Position',[155,470,180,25],'FontSize',10);
 hbuttonIframes  = uicontrol(hpanelInput,'Style','pushbutton','String','Add Frames','FontSize',10,...
-    'Position',[345,450,85,25],'callback',{@buttonIframes_Callback});
+    'Position',[345,470,85,25],'callback',{@buttonIframes_Callback});
 htextIbed  = uicontrol(hpanelInput,'Style','text','String',' Surface Ref. Image:',...
-    'FontSize',11,'Position',[13,415,140,24]);
-heditIbed  = uicontrol(hpanelInput,'Style','edit','Position',[155,415,180,25],'FontSize',10);
+    'FontSize',11,'Position',[13,435,140,24]);
+heditIbed  = uicontrol(hpanelInput,'Style','edit','Position',[155,435,180,25],'FontSize',10);
 hbuttonIbed  = uicontrol(hpanelInput,'Style','pushbutton','String','Add Image','FontSize',10,...
-    'Position',[345,415,85,25],'callback',{@buttonIbed_Callback});
+    'Position',[345,435,85,25],'callback',{@buttonIbed_Callback});
 htextSize  = uicontrol(hpanelInput,'Style','text','String','Size of the Checkerboard Square:',...
-    'FontSize',11,'Position',[45,370,240,24]);
-heditSize  = uicontrol(hpanelInput,'Style','edit','Position',[277,370,70,25],'FontSize',10);
-htextMm  = uicontrol(hpanelInput,'Style','text','String','mm','FontSize',11,'Position',[349,370,28,24]);
+    'FontSize',11,'Position',[45,390,240,24]);
+heditSize  = uicontrol(hpanelInput,'Style','edit','Position',[277,390,70,25],'FontSize',10);
+htextMm  = uicontrol(hpanelInput,'Style','text','String','mm','FontSize',11,'Position',[349,390,28,24]);
 %time Group
-hbgTime     = uibuttongroup(hpanelInput,'Units','pixels','Title','Time Laps','FontSize',10,'Position',[100 275 260 90],'SelectionChangedFcn',@selectionTime);
-hradioConstant    = uicontrol(hbgTime  ,'Style','radiobutton','String','Constant Lap','Position',[20 44 100 23],'FontSize',10);
-hradioVariable   = uicontrol(hbgTime  ,'Style','radiobutton','String','Variable Lap','Position',[20 16 100 23],'FontSize',10);
+hbgTime     = uibuttongroup(hpanelInput,'Units','pixels','Title','Time Lapse','FontSize',10,'Position',[100 295 260 90],'SelectionChangedFcn',@selectionTime);
+hradioConstant    = uicontrol(hbgTime  ,'Style','radiobutton','String','Constant Lapse','Position',[15 44 110 23],'FontSize',10);
+hradioVariable   = uicontrol(hbgTime  ,'Style','radiobutton','String','Variable Lapse','Position',[15 16 110 23],'FontSize',10);
 heditLaps    = uicontrol(hbgTime,'Style','edit','Position',[140,44,95,23],'FontSize',10,'callback',{@editLaps_Callback});
-hbuttonLaps  = uicontrol(hbgTime,'Style','pushbutton','String','Add Laps','FontSize',10,...
+hbuttonLaps  = uicontrol(hbgTime,'Style','pushbutton','String','Add Lapse','FontSize',10,...
     'Position',[140,14,95,23],'callback',{@buttonLaps_Callback},'Enable','off');
 htextS  = uicontrol(hbgTime,'Style','text','String','s','FontSize',11,'Position',[237,44,10,23]);
 %Fuel bed group
 hbgBed     = uibuttongroup(hpanelInput,'Units','pixels','Title','Fuel Bed Geometry','FontSize',10,...
-    'Position',[30 130 390 140],'SelectionChangedFcn',@selectionTime);
+    'Position',[30 150 390 140],'SelectionChangedFcn',@selectionTime);
 htextShape  = uicontrol(hbgBed,'Style','text','String','Fuel Bed Shape','FontSize',11,'Position',[45,92,107,24]);
 hpopShape  = uicontrol(hbgBed,'Style','pop','Units','pixels','String',{'Rectangular';'Triangle';'Draw Shape Manually'},...
     'value',3,'FontSize',10,'Position',[155,92,170,24],'callback',{@popShape_Callback});
@@ -99,21 +100,22 @@ htextCm2  = uicontrol(hbgBed,'Style','text','String','°','FontSize',10,'Position
 hbuttonDraw  = uicontrol(hbgBed,'Style','pushbutton','String','Draw Shape Manually','FontSize',10,...
     'Position',[225,15,150,23],'callback',{@buttonDraw_Callback});
 %%%%%
-hcheckSave = uicontrol(hpanelInput,'Style','checkbox','String','Save Frames with fire front lines',...
-    'FontSize',9.5,'Value',0,'Position',[25 60 320 23],'callback',{@checkSave_Callback});
-htextSens = uicontrol(hpanelInput,'Style','text','String','Detection Senstivity:','FontSize',9.5,'Position',[240 60 150 21]);
-heditSens = uicontrol(hpanelInput,'Style','edit','String','0.5','FontSize',9.5,'Position',[375 60 50 21]);
-htextResults  = uicontrol(hpanelInput,'Style','text','String','Results Directory:','FontSize',11,'Position',[35,95,130,23]);
-heditResults    = uicontrol(hpanelInput,'Style','edit','Position',[162,95,160,25],'FontSize',10,'Enable','off');
+htextResults  = uicontrol(hpanelInput,'Style','text','String','Results Directory:','FontSize',11,'Position',[35,115,130,23]);
+heditResults    = uicontrol(hpanelInput,'Style','edit','Position',[162,115,160,25],'FontSize',10,'Enable','off');
 hbuttonSelect  = uicontrol(hpanelInput,'Style','pushbutton','String','Select Folder','FontSize',10,...
-    'Position',[330,94,95,28],'callback',{@buttonSelect_Callback});
+    'Position',[330,114,95,28],'callback',{@buttonSelect_Callback});
+hcheckSave = uicontrol(hpanelInput,'Style','checkbox','String','Save Frames with fire front lines',...
+    'FontSize',9.5,'Value',0,'Position',[25 70 320 23],'callback',{@checkSave_Callback});
+htextSens = uicontrol(hpanelInput,'Style','text','String','Detection Senstivity:','FontSize',9.5,'Position',[240 82 150 21]);
+heditSens = uicontrol(hpanelInput,'Style','edit','String','0.5','FontSize',9.5,'Position',[375 82 50 21]);
+htextNfires = uicontrol(hpanelInput,'Style','text','String','Number of Fires:','FontSize',9.5,'Position',[240 58 150 21]);
+heditNfires = uicontrol(hpanelInput,'Style','edit','String','1','FontSize',9.5,'Position',[375 58 50 21]);
 hbuttonCalibrateM  = uicontrol(hpanelInput,'Style','pushbutton','String','Detect Fire Front Manually','FontSize',10,...
     'FontWeight','bold','Position',[7,13,215,35],'callback',{@buttonCalibrateM_Callback},'Enable','off');
 hbuttonCalibrateA  = uicontrol(hpanelInput,'Style','pushbutton','String','Detect Fire Front Automatically ','FontSize',10,...
     'FontWeight','bold','Position',[227,13,215,35],'callback',{@buttonCalibrateA_Callback},'Enable','off');
-
 %results panel (right)
-hpanelRes=uipanel(htabNew,'Units','pixels','Title','Results','FontSize',10,'Position',[450,0,350,595]);
+hpanelRes=uipanel(htabNew,'Units','pixels','Title','Results','FontSize',10,'Position',[450,0,350,615]);
 htextCFI  = uicontrol(hpanelRes,'Style','text','String','Total No. of Frames:',...
     'FontSize',10,'Position',[30,535,130,20]);
 heditCFI  = uicontrol(hpanelRes,'Style','edit','Position',[170,535,150,23],'FontSize',10,'FontWeight','bold','Enable','off');
@@ -129,10 +131,10 @@ hbuttonDist  = uicontrol(hpanelRes,'Style','pushbutton','String','Measure Distan
     'FontWeight','bold','Position',[50,300,250,35],'callback',{@buttonDist_Callback},'Enable','off');
 hbuttonMap  = uicontrol(hpanelRes,'Style','pushbutton','String','Build the Fire Propagation Map','FontSize',10,...
     'FontWeight','bold','Position',[50,250,250,35],'callback',{@buttonMap_Callback},'Enable','off');
-hbuttonIso  = uicontrol(hpanelRes,'Style','pushbutton','String','Present ROS''s as iso-surface','FontSize',10,...
-    'FontWeight','bold','Position',[50,200,250,35],'callback',{@buttonIso_Callback},'Enable','off');
+%hbuttonIso  = uicontrol(hpanelRes,'Style','pushbutton','String','Present ROS''s as iso-surface','FontSize',10,...
+%    'FontWeight','bold','Position',[50,200,250,35],'callback',{@buttonIso_Callback},'Enable','off');
 hbuttonCheck  = uicontrol(hpanelRes,'Style','pushbutton','String','Check Accuracy','FontSize',10,...
-    'FontWeight','bold','Position',[50,150,250,35],'callback',{@buttonCheck_Callback},'Enable','off');
+    'FontWeight','bold','Position',[50,200,250,35],'callback',{@buttonCheck_Callback},'Enable','off');
 hbuttonReset  = uicontrol(hpanelRes,'Style','pushbutton','String','Reset','FontSize',10,...
     'FontWeight','bold','Position',[50,30,100,40],'callback',{@buttonReset_Callback});
 hbuttonSaveE  = uicontrol(hpanelRes,'Style','pushbutton','String','Save Excel','FontSize',10,...
@@ -141,7 +143,7 @@ htextSave  = uicontrol(hpanelRes,'Style','text','String','Saved!',...
     'FontSize',9,'FontWeight','bold','Position',[195,7,120,20],'Visible','off');
 % Second tab (Load Project)
 % Inputs panel (left)
-hpanelLoad=uipanel(htabLoad,'Units','pixels','Title','Load Project','FontSize',10,'Position',[0,0,450,595]);
+hpanelLoad=uipanel(htabLoad,'Units','pixels','Title','Load Project','FontSize',10,'Position',[0,0,450,615]);
 htextLprojcet  = uicontrol(hpanelLoad,'Style','text','String','     Select Session:',...
     'FontSize',11,'FontWeight','bold','Position',[13,500,140,24]);
 heditLprojcet = uicontrol(hpanelLoad,'Style','edit','Position',[155,500,180,25],'FontSize',10);
@@ -152,11 +154,8 @@ htextAresults  = uicontrol(hpanelLoad,'Style','text','String','Results Directory
 heditAresults  = uicontrol(hpanelLoad,'Style','edit','Position',[155,450,180,25],'FontSize',10);
 hbuttonAresults  = uicontrol(hpanelLoad,'Style','pushbutton','String','Select Folder','FontSize',10,...
     'Position',[343,448,90,30],'callback',{@buttonSelect2_Callback});
-htextNewName  = uicontrol(hpanelLoad,'Style','text','String','New Session Name:',...
-    'FontSize',11,'FontWeight','bold','Position',[40,380,150,24]);
-heditNewName = uicontrol(hpanelLoad,'Style','edit','Position',[190,380,200,25],'FontSize',10,'callback',{@editNewName_Callback});
 %results panel (right)
-hpanelResult=uipanel(htabLoad,'Units','pixels','Title','Results','FontSize',10,'Position',[450,0,350,595]);
+hpanelResult=uipanel(htabLoad,'Units','pixels','Title','Results','FontSize',10,'Position',[450,0,350,615]);
 htextCFI2  = uicontrol(hpanelResult,'Style','text','String','Total No. of Frames:',...
     'FontSize',10,'Position',[25,510,170,20]);
 heditCFI2  = uicontrol(hpanelResult,'Style','edit','Position',[175,510,100,23],'FontSize',10,'FontWeight','bold','Enable','off');
@@ -170,15 +169,15 @@ hbuttonDist2  = uicontrol(hpanelResult,'Style','pushbutton','String','Measure Di
     'FontWeight','bold','Position',[50,300,250,35],'callback',{@buttonDist_Callback},'Enable','off');
 hbuttonMap2  = uicontrol(hpanelResult,'Style','pushbutton','String','Build the Fire Propagation Map','FontSize',10,...
     'FontWeight','bold','Position',[50,250,250,35],'callback',{@buttonMap_Callback},'Enable','off');
-hbuttonIso2 = uicontrol(hpanelResult,'Style','pushbutton','String','Build iso-surface From ROS''s','FontSize',10,...
-    'FontWeight','bold','Position',[50,200,250,35],'callback',{@buttonIso_Callback},'Enable','off');
+%hbuttonIso2 = uicontrol(hpanelResult,'Style','pushbutton','String','Build iso-surface From ROS''s','FontSize',10,...
+%    'FontWeight','bold','Position',[50,200,250,35],'callback',{@buttonIso_Callback},'Enable','off');
 hbuttonCheck2  = uicontrol(hpanelResult,'Style','pushbutton','String','Check Clibration Accuracy','FontSize',10,...
-    'FontWeight','bold','Position',[50,150,250,35],'callback',{@buttonCheck_Callback},'Enable','off');
+    'FontWeight','bold','Position',[50,200,250,35],'callback',{@buttonCheck_Callback},'Enable','off');
 hbuttonSaveE2  = uicontrol(hpanelResult,'Style','pushbutton','String','Save Excel','FontSize',10,...
     'FontWeight','bold','Position',[200,30,100,40],'callback',{@buttonSaveE_Callback},'Enable','off');
 
 %the matach tab 
-hpanelMatch =uipanel(htabMatch,'Units','pixels','Title','Match calibration and fire images','FontSize',10,'Position',[0,0,800,595]);
+hpanelMatch =uipanel(htabMatch,'Units','pixels','Title','Match calibration and fire images','FontSize',10,'Position',[0,0,800,615]);
 hpopModeMat  = uicontrol(htabMatch,'Style','pop','Units','pixels','String',{'New Matching Setting';'Load Matching Setting'},...
     'value',1,'FontSize',11,'Position',[320,500,200,30],'callback',{@popModeMat_Callback});
 uicontrol(hpanelMatch,'Style','text','String','Mode:','FontSize',12,'FontWeight','bold','Position',[255,502,50,24]);
@@ -213,7 +212,7 @@ hbuttonSaveSet = uicontrol(hpanelMatch,'Style','pushbutton','String','Save Setti
     'FontWeight','bold','Position',[510,100,100,80],'callback',{@buttonSaveSet_Callback},'Enable','off');
 
 %the Extract tab 
-hpanelExtract=uipanel(htabExtract,'Units','pixels','Title','Extract frames from video','FontSize',10,'Position',[0,0,800,595]);
+hpanelExtract=uipanel(htabExtract,'Units','pixels','Title','Extract frames from video','FontSize',10,'Position',[0,0,800,615]);
 htextVideo  = uicontrol(hpanelExtract,'Style','text','String','             Video:',...
     'FontSize',11,'Position',[98,485,160,24]);
 heditVideo  = uicontrol(hpanelExtract,'Style','edit','Position',[255,485,250,25],'FontSize',10);
@@ -253,42 +252,42 @@ hbuttonExt  = uicontrol(hpanelExtract,'Style','pushbutton','String','Extract','F
     'Position',[290,150,200,50],'callback',{@buttonExt_Callback});
 
 %the calibration tab 
-hpanelEvaluate=uipanel(htabEvaluate,'Units','pixels','Title','Creat or evaluate a camera calibration','FontSize',10,'Position',[0,0,800,595]);
+hpanelEvaluate=uipanel(htabEvaluate,'Units','pixels','Title','Creat or evaluate a camera calibration','FontSize',10,'Position',[0,0,800,615]);
 htextAdd  = uicontrol(hpanelEvaluate,'Style','text','String','Calibration Images:',...
-    'FontSize',11,'Position',[18,530,160,24]);
-heditAdd  = uicontrol(hpanelEvaluate,'Style','edit','Position',[175,530,160,25],'FontSize',10);
+    'FontSize',11,'Position',[18,550,160,24]);
+heditAdd  = uicontrol(hpanelEvaluate,'Style','edit','Position',[175,550,160,25],'FontSize',10);
 hbuttonAdd  = uicontrol(hpanelEvaluate,'Style','pushbutton','String','Add Images','FontSize',10,...
-    'Position',[357,530,100,27],'callback',{@buttonAdd_Callback});
+    'Position',[357,550,100,27],'callback',{@buttonAdd_Callback});
 htextSizeE  = uicontrol(hpanelEvaluate,'Style','text','String','Size of the Checkerboard Square:',...
-    'FontSize',11,'Position',[60,480,240,24]);
-heditSizeE  = uicontrol(hpanelEvaluate,'Style','edit','Position',[292,480,70,25],'FontSize',10);
-uicontrol(hpanelEvaluate,'Style','text','String','mm','FontSize',11,'Position',[364,480,28,24]);
+    'FontSize',11,'Position',[60,500,240,24]);
+heditSizeE  = uicontrol(hpanelEvaluate,'Style','edit','Position',[292,500,70,25],'FontSize',10);
+uicontrol(hpanelEvaluate,'Style','text','String','mm','FontSize',11,'Position',[364,500,28,24]);
 hbuttonDet  = uicontrol(hpanelEvaluate,'Style','pushbutton','String','Detect Checkerboard','FontSize',11,...
-    'Position',[20,412,150,50],'Enable','off','callback',{@buttonDet_Callback});
+    'Position',[20,432,150,50],'Enable','off','callback',{@buttonDet_Callback});
 hbuttonCalib  = uicontrol(hpanelEvaluate,'Style','pushbutton','String','Calibrate','FontSize',10,...
-    'Position',[180,440,120,25],'Enable','off','callback',{@buttonCalib_Callback});
+    'Position',[180,460,120,25],'Enable','off','callback',{@buttonCalib_Callback});
 hbuttonLoadCalib  = uicontrol(hpanelEvaluate,'Style','pushbutton','String','Load Camera P.','FontSize',10,...
-    'Position',[180,410,120,25],'Enable','off','callback',{@LoadCalib_Callback});
+    'Position',[180,430,120,25],'Enable','off','callback',{@LoadCalib_Callback});
 hbuttonSaveCalib  = uicontrol(hpanelEvaluate,'Style','pushbutton','String','Save Camera P.','FontSize',11,...
-    'Position',[310,412,150,50],'Enable','off','callback',{@buttonSaveCalib_Callback});
+    'Position',[310,432,150,50],'Enable','off','callback',{@buttonSaveCalib_Callback});
 htextAddI  = uicontrol(hpanelEvaluate,'Style','text','String','Added Images:',...
-    'FontSize',11,'Position',[45,365,100,24]);
-heditAddI  = uicontrol(hpanelEvaluate,'Style','edit','Position',[145,365,50,25],'FontSize',10,'Enable','off');
+    'FontSize',11,'Position',[45,385,100,24]);
+heditAddI  = uicontrol(hpanelEvaluate,'Style','edit','Position',[145,385,50,25],'FontSize',10,'Enable','off');
 htextRejI  = uicontrol(hpanelEvaluate,'Style','text','String','Rejected Images:',...
-    'FontSize',11,'Position',[260,365,120,24]);
-heditRejI  = uicontrol(hpanelEvaluate,'Style','edit','Position',[380,365,50,25],'FontSize',10,'Enable','off');
-uicontrol(hpanelEvaluate,'Style','text','String','Show Image:','FontSize',11,'Position',[20,322,100,24]);
-hpopImage  = uicontrol(hpanelEvaluate,'Style','pop','Units','pixels','value',1,'String',{'Not Specified'},'FontSize',10,'Position',[120,322,150,24],'callback',{@popImage_Callback});
+    'FontSize',11,'Position',[260,385,120,24]);
+heditRejI  = uicontrol(hpanelEvaluate,'Style','edit','Position',[380,385,50,25],'FontSize',10,'Enable','off');
+uicontrol(hpanelEvaluate,'Style','text','String','Show Image:','FontSize',11,'Position',[20,342,100,24]);
+hpopImage  = uicontrol(hpanelEvaluate,'Style','pop','Units','pixels','value',1,'String',{'Not Specified'},'FontSize',10,'Position',[120,342,150,24],'callback',{@popImage_Callback});
 hbuttonCheckAcc  = uicontrol(hpanelEvaluate,'Style','pushbutton','String','Check Accuracy','FontSize',11,...
-    'Position',[300,318,150,30],'Enable','off','callback',{@buttonCheckAcc_Callback});
+    'Position',[300,338,150,30],'Enable','off','callback',{@buttonCheckAcc_Callback});
 haxisEval = axes(hpanelEvaluate,'box','off','xtick',[],'ytick',[],'ztick',[],'xcolor',[1 1 1],'ycolor',[1 1 1],'Units','pixels',...
-    'Position',[20,10,450,300],'color','white');
-haxisErr = axes(hpanelEvaluate,'Units','pixels','Position',[510,350,250,200],'color','white');
-haxisExt = axes(hpanelEvaluate,'Units','pixels','Position',[510,100,250,200],'color','white');
-htextACCM  = uicontrol(hpanelEvaluate,'Style','text','String','Ave. S. Error (cm): +/-','FontSize',11,'Position',[510,35,150,24]);
-heditACCM  = uicontrol(hpanelEvaluate,'Style','edit','Position',[670,35,50,25],'FontSize',10,'Enable','off');
-htextACCMAX  = uicontrol(hpanelEvaluate,'Style','text','String','Max. S. Error(cm): +/-','FontSize',11,'Position',[510,5,150,24]);
-heditACCMAX  = uicontrol(hpanelEvaluate,'Style','edit','Position',[670,5,50,25],'FontSize',10,'Enable','off');
+    'Position',[20,20,450,300],'color','white');
+haxisErr = axes(hpanelEvaluate,'Units','pixels','Position',[510,370,250,200],'color','white');
+haxisExt = axes(hpanelEvaluate,'Units','pixels','Position',[510,120,250,200],'color','white');
+htextACCM  = uicontrol(hpanelEvaluate,'Style','text','String','Ave. S. Error (cm): +/-','FontSize',11,'Position',[510,50,150,24]);
+heditACCM  = uicontrol(hpanelEvaluate,'Style','edit','Position',[670,50,50,25],'FontSize',10,'Enable','off');
+htextACCMAX  = uicontrol(hpanelEvaluate,'Style','text','String','Max. S. Error(cm): +/-','FontSize',11,'Position',[510,15,150,24]);
+heditACCMAX  = uicontrol(hpanelEvaluate,'Style','edit','Position',[670,15,50,25],'FontSize',10,'Enable','off');
 %%%%%%%%%%%
 
 MainF.Name = 'Fire ROS Calculator';
@@ -296,13 +295,14 @@ movegui(MainF,'center')
 MainF.MenuBar = 'none';
 MainF.ToolBar = 'none';
 MainF.NumberTitle='off';
-MainF.Visible = 'on';
+
 
 warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
 jframe=get(MainF,'javaframe');
-jIcon=javax.swing.ImageIcon(fullfile(appPath,'icon_ROS.gif'));
+jIcon=javax.swing.ImageIcon(fullfile(appPath,'icon ROS.gif'));
 jframe.setFigureIcon(jIcon);
 
+MainF.Visible = 'on';
 %setting some values
 shape=3; interval=0;
 TimeSelection=1;
@@ -357,13 +357,18 @@ loudstatuse=0;
         end
     end
     function buttonLaps_Callback(src,event)
+        global Ftime
         enter_time_lap
-        results{4,1}='Variable time laps are: (in order) ';results{4,2:(size(localtime,2)+1)}=num2cell(localtime(1,:));
+        waitfor(Ftime)
+        results{4,1}='Variable time lapse are: (in order) ';
+        for s=1:numframes-1
+            results{4,s+1}=num2cell(localtime(1,s));
+        end
     end
     function editLaps_Callback(src,event)
         laps = str2double(get(heditLaps,'String'));
         localtime(1,(1:numframes-1))=laps;
-        results{4,1}='Constant time lap is: ';results{4,2}=laps;
+        results{4,1}='Constant time lapse is: ';results{4,2}=laps;
     end
     function popShape_Callback(src,event)
         shapeSelection=get(hpopShape,'Value');
@@ -434,7 +439,7 @@ loudstatuse=0;
             end
             man_detect
             hbuttonAROS.Enable='on'; hbuttonDROS.Enable='on'; hbuttonDist.Enable='on'; hbuttonMap.Enable='on';
-            hbuttonIso.Enable='on'; hbuttonCheck.Enable='on'; hbuttonSaveE.Enable='on';
+            hbuttonCheck.Enable='on'; hbuttonSaveE.Enable='on'; %hbuttonIso.Enable='on';
             set(heditCFI,'String',num2str(numframes));
             set(MainF, 'pointer', 'arrow');drawnow;
         else
@@ -449,6 +454,7 @@ loudstatuse=0;
             hwait = waitbar(0,'Calibrating...','Name','Automatic fire front detection');
             jframe=get(hwait,'javaframe'); jframe.setFigureIcon(javax.swing.ImageIcon(fullfile(appPath,'icon ROS.gif')));
             detSens=str2double(get(heditSens,'String'));
+            Nfires=str2double(get(heditNfires,'String'));
             squareSize=str2double(get(heditSize,'String'));
             Lworld=str2double(get(heditLength,'String'))*10;
             CLworld=str2double(get(heditLength2,'String'))*10;
@@ -461,7 +467,7 @@ loudstatuse=0;
             end
             auto_detect
             hbuttonAROS.Enable='on'; hbuttonDROS.Enable='on'; hbuttonDist.Enable='on'; hbuttonMap.Enable='on';
-            hbuttonIso.Enable='on'; hbuttonCheck.Enable='on'; hbuttonSaveE.Enable='on'; hframeEva.Enable='on';
+            hbuttonCheck.Enable='on'; hbuttonSaveE.Enable='on'; hframeEva.Enable='on'; %hbuttonIso.Enable='on';
             set(heditCFI,'String',num2str(numframes));
             close(hwait)
         else
@@ -486,9 +492,9 @@ loudstatuse=0;
     function buttonMap_Callback(src,event)
         build_prop_map
     end
-    function buttonIso_Callback(src,event)
-        build_isoROS
-    end
+    %function buttonIso_Callback(src,event)
+    %    build_isoROS
+    %end
     function buttonCheck_Callback(src,event)
         check_accuracy
     end
@@ -523,22 +529,15 @@ loudstatuse=0;
         [work, workpathname] = uigetfile('*.mat','Load a Session');
         loudstatuse=1;
         set(heditLprojcet,'String',work);
-        load([workpathname,work],'numframes')
+        load([workpathname,work])
+        %load([workpathname,work],'numframes')
         set(heditCFI2,'String',num2str(numframes));
-        results=cell(0);
-        results{1,1}='Session Name: '; results{1,2}=project_name;
-        resultrow=2;
     end
     function buttonSelect2_Callback(src,event)
         resultsfolder = uigetdir(workpathname,'Select a Folder To Save the Results On');
         set(heditAresults,'String',resultsfolder);
-    end
-    function editNewName_Callback(src,event)
-        project_name=get(heditNewName,'String');
         hbuttonAROS2.Enable='on'; hbuttonDROS2.Enable='on'; hbuttonDist2.Enable='on'; hbuttonMap2.Enable='on';
         hbuttonIso2.Enable='on'; hbuttonCheck2.Enable='on'; hbuttonSaveE2.Enable='on';
-        results{1,1}='Session Name: '; results{1,2}=project_name;
-        resultrow=2;
     end
 
 %% interactive controls for the Matching Images Tab
