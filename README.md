@@ -12,9 +12,9 @@ There is a compiled version ready to install and use for windows, to install the
 
 This program was developed by [ADAI|CEIF](http://www.adai.pt) team (Association for the Development of Industrial Aerodynamics | Center of Studies about Forest Fires), University of Coimbra, Portugal. 
 
-Download The latest Version (v.2.5) from: [Fire ROS Calculator v.2.5](https://github.com/AAbouali/Fire_ROS_Calculator/releases/download/2.5/Fire_ROS_Calculator_web_v2_5.exe)
+Download The latest Version (v.2.5.1) from: [Fire ROS Calculator v.2.5.1](https://github.com/AAbouali/Fire_ROS_Calculator/releases/download/2.5/Fire_ROS_Calculator_web_v2.5.1.exe)
 
-There is Manual for the software: [Fire ROS Calculator Manual](https://github.com/AAbouali/Fire_ROS_Calculator/releases/download/2.5/Fire.ROS.Calculator.manual.v2.5.pdf) and a verification report: [Fire ROS Calculator Verification](https://github.com/AAbouali/Fire_ROS_Calculator/releases/download/2.5/Fire.ROS.Calculator.Verification.v2.5.pdf)
+There is Manual for the software: [Fire ROS Calculator Manual](https://github.com/AAbouali/Fire_ROS_Calculator/releases/download/2.5/Fire.ROS.Calculator.manual.v2.5.1.pdf) and a verification report: [Fire ROS Calculator Verification](https://github.com/AAbouali/Fire_ROS_Calculator/releases/download/2.5/Fire.ROS.Calculator.Verification.v2.5.1.pdf)
 
 We are looking forward to developing the program more and also include the ability to calculate the ROS of a fire spreading in an outdoor setting. 
 
