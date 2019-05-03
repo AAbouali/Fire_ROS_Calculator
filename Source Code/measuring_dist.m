@@ -179,13 +179,13 @@ image_source=1;
         results{resultrow,1}=[dist_name,'(Distance)'];
         resultrow=resultrow+1;
         if numdis>1
-            results{resultrow,1}=('The avarge distance');
-            results{resultrow,2}=mean(MeasuredDist);
+            results{resultrow,1}=('The avarge distance (cm)');
+            results{resultrow,2}=mean(MeasuredDist)/10;
             resultrow=resultrow+1;
         end
-        results{resultrow,1}=('The measured distances');
+        results{resultrow,1}=('The measured distances (cm)');
         resultrow=resultrow+1;
-        results(resultrow,1:size(MeasuredDist,2))=num2cell(MeasuredDist);
+        results(resultrow,1:size(MeasuredDist,2))=num2cell(MeasuredDist/10);
         resultrow=resultrow+2;
         set(heditResult,'String',[num2str(round(mean(MeasuredDist))/10),' cm']);
     end

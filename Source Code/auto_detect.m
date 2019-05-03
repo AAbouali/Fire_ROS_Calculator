@@ -1,6 +1,6 @@
 function auto_detect
 global  fflineeq  R t cameraParams Xworld Yworld X Y numframes hwait BI MaskROI XcornersWorld YcornersWorld ffpoints time squareSize resultrow burndarea
-global Xcorners Ycorners project_name resultsfolder results imagesUsed drawfront  images  frame  appPath Bnd shape cornersnum detSens Nfires fireLastFrame
+global Xcorners Ycorners project_name resultsfolder results imagesUsed drawfront  images  frame  appPath Bnd shape cornersnum detSens Nfires fireLastFrame namedrawfront
 
 if drawfront==1
     namedrawfront=[project_name ' DFF'];folder=fullfile(resultsfolder,namedrawfront);

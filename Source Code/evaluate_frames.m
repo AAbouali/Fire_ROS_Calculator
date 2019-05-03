@@ -84,7 +84,7 @@ editMode=1; allFrames=0; fireToEditNo=1;
         fireToEditNo=get(hpopFire,'Value');
     end
     function Apply_Callback(src,event)
-        global him handles
+        global him handles Bn
         edit=1;
         allFrames=get(hcheckApply,'Value');
         set(f, 'pointer', 'watch'); drawnow;
@@ -127,7 +127,8 @@ editMode=1; allFrames=0; fireToEditNo=1;
                     BI{i}(Mask == 1) = 0;
                 end
                 BI{i}(MaskROI == 0) = 0;
-                [Bnd{i},~,N] = bwboundaries(BI{i},'noholes',8);
+                Bn=[];
+                [Bn,~,N] = bwboundaries(BI{i},'noholes',8);
                 SizeDetFires=zeros(1,N);
                 for s=1:N
                     %SizeDetFires(1,s)=numel(Bn{s,1});
@@ -158,6 +159,7 @@ editMode=1; allFrames=0; fireToEditNo=1;
 % To save the updated locations of the fire fronts on the saved session
 % file (worksapce)
     function f_CloseRequestFcn(src,event)
+        global namedrawfront
         set(MainF, 'pointer', 'watch'); drawnow;
         delete(f)
         if edit==1

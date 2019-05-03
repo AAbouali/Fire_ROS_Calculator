@@ -81,8 +81,7 @@ hbuttonLaps  = uicontrol(hbgTime,'Style','pushbutton','String','Add Lapse','Font
     'Position',[140,14,95,23],'callback',{@buttonLaps_Callback},'Enable','off');
 htextS  = uicontrol(hbgTime,'Style','text','String','s','FontSize',11,'Position',[237,44,10,23]);
 %Fuel bed group
-hbgBed     = uibuttongroup(hpanelInput,'Units','pixels','Title','Fuel Bed Geometry','FontSize',10,...
-    'Position',[30 150 390 140],'SelectionChangedFcn',@selectionTime);
+hbgBed     = uibuttongroup(hpanelInput,'Units','pixels','Title','Fuel Bed Geometry','FontSize',10,'Position',[30 150 390 140],'SelectionChangedFcn',@selectionShape);
 htextShape  = uicontrol(hbgBed,'Style','text','String','Fuel Bed Shape','FontSize',11,'Position',[45,92,107,24]);
 hpopShape  = uicontrol(hbgBed,'Style','pop','Units','pixels','String',{'Rectangular';'Triangle';'Draw Shape Manually'},...
     'value',3,'FontSize',10,'Position',[155,92,170,24],'callback',{@popShape_Callback});
@@ -346,11 +345,11 @@ loudstatuse=0;
     end
     function selectionTime(src,event)
         selection=event.NewValue.String;
-        if strcmp(selection,'Constant Lap')
+        if strcmp(selection,'Constant Lapse')
             TimeSelection=1;
             heditLaps.Enable='on';
             hbuttonLaps.Enable='off';
-        elseif strcmp(selection,'Variable Lap')
+        elseif strcmp(selection,'Variable Lapse')
             TimeSelection=2;
             hbuttonLaps.Enable='on';
             heditLaps.Enable='off';
@@ -362,7 +361,7 @@ loudstatuse=0;
         waitfor(Ftime)
         results{4,1}='Variable time lapse are: (in order) ';
         for s=1:numframes-1
-            results{4,s+1}=num2cell(localtime(1,s));
+            results{4,s+1}=num2str(localtime(1,s));
         end
     end
     function editLaps_Callback(src,event)

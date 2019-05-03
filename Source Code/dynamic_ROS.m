@@ -144,8 +144,8 @@ PFframe=0;PLframe=0;
                         no_inter=1;
                     else
                         plot(haxis,xi,yi,'o')
-                        line_x_intersect(j,i)=xi(1,1);
-                        line_y_intersect(j,i)=yi(1,1);
+                        line_x_intersect(j,i-Fframe+1)=xi(1,1);
+                        line_y_intersect(j,i-Fframe+1)=yi(1,1);
                         no_inter=0;
                         break
                     end

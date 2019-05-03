@@ -1,5 +1,5 @@
 function man_detect
-global XcornersWorld YcornersWorld answer_rep ffpoints fflineeq time R t cameraParams Xworld Yworld X Y squareSize bwporig numframes framefiles checkf calibrationFile
+global XcornersWorld YcornersWorld answer_rep ffpoints fflineeq time R t cameraParams Xworld Yworld X Y squareSize bwporig numframes framefiles checkf calibrationFile namedrawfront
 global Xcorners Ycorners project_name shape cornersnum localtime resultsfolder results imagesUsed drawfront repeatF images resultrow AngleWorld Lworld frame_corr frame Nfires fireLastFrame
 %% Detect the fire front on each frame
 if drawfront==1
