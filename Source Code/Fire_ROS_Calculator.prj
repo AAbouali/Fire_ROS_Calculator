@@ -8,14 +8,16 @@
       <file>${PROJECT_ROOT}\Fire_ROS_Calculator_resources\icon_24.png</file>
       <file>${PROJECT_ROOT}\Fire_ROS_Calculator_resources\icon_16.png</file>
     </param.icons>
-    <param.version>2.5</param.version>
+    <param.version>2.6</param.version>
     <param.authnamewatermark>Abdelrahman Abouali</param.authnamewatermark>
     <param.email>abouali@adai.pt</param.email>
     <param.company>ADAI-CEIF</param.company>
     <param.summary>Fire ROS Calculator is a softwere for forest fire researchers to calculate the ROS of a fire propagation in a laboratory setting</param.summary>
     <param.description>This program will enable you to calibrate the camera that was used to film the fire propagation, detect the fire front and calculate the rate of spread (ROS) of that fire. The program gives a wide variety of ouputs that can give its user a better understanding of the fire behavior.
 
-This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</param.description>
+This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+You should have received a copy of the GNU General Public Licens along with this program.  If not, see https://www.gnu.org/licenses</param.description>
     <param.screenshot>${PROJECT_ROOT}\splash.png</param.screenshot>
     <param.guid />
     <param.installpath.string>\ADAI-CEIF\</param.installpath.string>
@@ -34,7 +36,7 @@ This work is licensed under a Creative Commons Attribution-NonCommercial-ShareAl
     <param.web.mcr>true</param.web.mcr>
     <param.package.mcr>false</param.package.mcr>
     <param.no.mcr>false</param.no.mcr>
-    <param.web.mcr.name>Fire_ROS_Calculator_web_v2_5</param.web.mcr.name>
+    <param.web.mcr.name>Fire_ROS_Calculator_web_v2_6</param.web.mcr.name>
     <param.package.mcr.name>Fire_ROS_Calculator_inc_v2_5</param.package.mcr.name>
     <param.no.mcr.name>MyAppInstaller_app</param.no.mcr.name>
     <param.windows.command.prompt>true</param.windows.command.prompt>
