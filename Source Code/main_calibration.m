@@ -23,29 +23,33 @@
 
 function main_calibration
 global XcornersWorld YcornersWorld answer_rep ffpoints fflineeq time R t cameraParams Xworld Yworld X Y squareSize bwporig numframes framefiles checkf calibrationFile hwait man_mod
-global Xcorners Ycorners project_name shape cornersnum localtime resultsfolder results imagesUsed drawfront repeatF images resultrow AngleWorld Lworld CLworld frame 
+global Xcorners Ycorners project_name shape cornersnum localtime resultsfolder results imagesUsed drawfront repeatF images resultrow AngleWorld Lworld CLworld frame calibMode Xref Yref XrefReal YrefReal
 %% Calibration 
 % detect checkboard corners
 load(calibrationFile)
-%remove lens distortion from the image with the fuel bed
-im = undistortImage(bwporig, cameraParams,'OutputView', 'full');
-
-%Get the extrinsics (rotation and translation) for fuel bed image
-[imagePoints,boardSize] = detectCheckerboardPoints(im);
-worldPoints = generateCheckerboardPoints(boardSize, squareSize);
-[R, t] = extrinsics(imagePoints, worldPoints, cameraParams);
-
+if calibMode==1
+    %remove lens distortion from the image with the fuel be
+    im = undistortImage(bwporig, cameraParams,'OutputView', 'full');
+    %Get the extrinsics (rotation and translation) for fuel bed image.
+    [imagePoints,boardSize] = detectCheckerboardPoints(im);
+    worldPoints = generateCheckerboardPoints(boardSize, squareSize);
+    [R, t] = extrinsics(imagePoints, worldPoints, cameraParams);
+else
+    imagePoints(:,1)=Xref; imagePoints(:,2)=Yref;
+    worldPoints(:,1)=XrefReal; worldPoints(:,2)=YrefReal;
+    [R, t] = extrinsics(imagePoints, worldPoints, cameraParams);
+end
 %Do the same last two steps to the frames and save them
 frame= cell(1,numframes);
 for i=1:numframes
     %read the image with the fuel bed
     imframe = imread(framefiles{i});
     %remove lens distortion from the image
-    %im = undistortImage(imframe, cameraParams);
+    %imframe = undistortImage(imframe, cameraParams);
     frame{i} = imframe;
 end
 if man_mod==0
-waitbar((numframes*0.5)/(numframes*3),hwait,'Calibrating...')
+    waitbar((numframes*0.5)/(numframes*3),hwait,'Calibrating...')
 end
 %% define the world coordinates for some points
 if shape==2

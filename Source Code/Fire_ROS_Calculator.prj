@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="193736081" file="C:\Program Files\MATLAB\R2018a\bin\ROS\Fire_ROS_Calculator.prj" location="C:\Program Files\MATLAB\R2018a\bin\ROS" name="Fire_ROS_Calculator" preferred-package-location="C:\Program Files\MATLAB\R2018a\bin\ROS\Fire_ROS_Calculator\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="2454283854" file="C:\Program Files\MATLAB\R2020b\bin\ROS\Fire_ROS_Calculator.prj" location="C:\Program Files\MATLAB\R2020b\bin\ROS" name="Fire_ROS_Calculator" preferred-package-location="C:\Program Files\MATLAB\R2018a\bin\ROS\Fire_ROS_Calculator\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>Fire_ROS_Calculator</param.appname>
     <param.icon>${PROJECT_ROOT}\Fire_ROS_Calculator_resources\icon.ico</param.icon>
     <param.icons>
@@ -8,12 +8,14 @@
       <file>${PROJECT_ROOT}\Fire_ROS_Calculator_resources\icon_24.png</file>
       <file>${PROJECT_ROOT}\Fire_ROS_Calculator_resources\icon_16.png</file>
     </param.icons>
-    <param.version>2.6</param.version>
+    <param.version>2.7</param.version>
     <param.authnamewatermark>Abdelrahman Abouali</param.authnamewatermark>
     <param.email>abouali@adai.pt</param.email>
     <param.company>ADAI-CEIF</param.company>
     <param.summary>Fire ROS Calculator is a softwere for forest fire researchers to calculate the ROS of a fire propagation in a laboratory setting</param.summary>
     <param.description>This program will enable you to calibrate the camera that was used to film the fire propagation, detect the fire front and calculate the rate of spread (ROS) of that fire. The program gives a wide variety of ouputs that can give its user a better understanding of the fire behavior.
+
+Copyright (C) 2019  Abdelrahman Abouali
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
@@ -36,8 +38,8 @@ You should have received a copy of the GNU General Public Licens along with this
     <param.web.mcr>true</param.web.mcr>
     <param.package.mcr>false</param.package.mcr>
     <param.no.mcr>false</param.no.mcr>
-    <param.web.mcr.name>Fire_ROS_Calculator_web_v2_6</param.web.mcr.name>
-    <param.package.mcr.name>Fire_ROS_Calculator_inc_v2_5</param.package.mcr.name>
+    <param.web.mcr.name>Fire_ROS_Calculator_web_v2_7</param.web.mcr.name>
+    <param.package.mcr.name>Fire_ROS_Calculator_inc_v2_6</param.package.mcr.name>
     <param.no.mcr.name>MyAppInstaller_app</param.no.mcr.name>
     <param.windows.command.prompt>true</param.windows.command.prompt>
     <param.create.log>true</param.create.log>
@@ -45,7 +47,12 @@ You should have received a copy of the GNU General Public Licens along with this
     <param.native.matlab>false</param.native.matlab>
     <param.checkbox>false</param.checkbox>
     <param.example />
-    <param.help.text />
+    <param.help.text>Syntax 
+	  -? 
+	 
+ Input Arguments 
+	 -?  print help on how to use the application 
+	 input arguments</param.help.text>
     <unset>
       <param.guid />
       <param.installpath.combo />
@@ -67,7 +74,6 @@ You should have received a copy of the GNU General Public Licens along with this
       <param.native.matlab />
       <param.checkbox />
       <param.example />
-      <param.help.text />
     </unset>
     <fileset.main>
       <file>${PROJECT_ROOT}\Fire_ROS_Calculator.m</file>
@@ -103,35 +109,26 @@ You should have received a copy of the GNU General Public Licens along with this
       <file>${PROJECT_ROOT}\worldToPoints.m</file>
     </fileset.depfun>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\Fire_ROS_Calculator\for_testing" name="splash.png" optional="false">C:\Program Files\MATLAB\R2018a\bin\ROS\Fire_ROS_Calculator\for_testing\splash.png</file>
-      <file location="${PROJECT_ROOT}\Fire_ROS_Calculator\for_testing" name="readme.txt" optional="true">C:\Program Files\MATLAB\R2018a\bin\ROS\Fire_ROS_Calculator\for_testing\readme.txt</file>
-      <file location="${PROJECT_ROOT}\Fire_ROS_Calculator\for_testing" name="Fire_ROS_Calculator.exe" optional="false">C:\Program Files\MATLAB\R2018a\bin\ROS\Fire_ROS_Calculator\for_testing\Fire_ROS_Calculator.exe</file>
+      <file location="${PROJECT_ROOT}\Fire_ROS_Calculator\for_testing" name="splash.png" optional="false">C:\Program Files\MATLAB\R2020b\bin\ROS\Fire_ROS_Calculator\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\Fire_ROS_Calculator\for_testing" name="Fire_ROS_Calculator.exe" optional="false">C:\Program Files\MATLAB\R2020b\bin\ROS\Fire_ROS_Calculator\for_testing\Fire_ROS_Calculator.exe</file>
+      <file location="${PROJECT_ROOT}\Fire_ROS_Calculator\for_testing" name="readme.txt" optional="true">C:\Program Files\MATLAB\R2020b\bin\ROS\Fire_ROS_Calculator\for_testing\readme.txt</file>
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>C:\Program Files\MATLAB\R2018a</root>
+      <root>C:\Program Files\MATLAB\R2020b</root>
       <toolboxes>
-        <toolbox name="fixedpoint" />
         <toolbox name="matlabcoder" />
-        <toolbox name="matlabhdlcoder" />
         <toolbox name="embeddedcoder" />
         <toolbox name="gpucoder" />
+        <toolbox name="fixedpoint" />
+        <toolbox name="matlabhdlcoder" />
+        <toolbox name="neuralnetwork" />
         <toolbox name="polyspacebugfinder" />
       </toolboxes>
-      <toolbox>
-        <fixedpoint>
-          <enabled>true</enabled>
-        </fixedpoint>
-      </toolbox>
       <toolbox>
         <matlabcoder>
           <enabled>true</enabled>
         </matlabcoder>
-      </toolbox>
-      <toolbox>
-        <matlabhdlcoder>
-          <enabled>true</enabled>
-        </matlabhdlcoder>
       </toolbox>
       <toolbox>
         <embeddedcoder>
@@ -142,6 +139,21 @@ You should have received a copy of the GNU General Public Licens along with this
         <gpucoder>
           <enabled>true</enabled>
         </gpucoder>
+      </toolbox>
+      <toolbox>
+        <fixedpoint>
+          <enabled>true</enabled>
+        </fixedpoint>
+      </toolbox>
+      <toolbox>
+        <matlabhdlcoder>
+          <enabled>true</enabled>
+        </matlabhdlcoder>
+      </toolbox>
+      <toolbox>
+        <neuralnetwork>
+          <enabled>true</enabled>
+        </neuralnetwork>
       </toolbox>
       <toolbox>
         <polyspacebugfinder>

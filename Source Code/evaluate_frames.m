@@ -112,6 +112,9 @@ editMode=1; allFrames=0; fireToEditNo=1;
         allFrames=get(hcheckApply,'Value');
         set(f, 'pointer', 'watch'); drawnow;
         Mask = createMask(hArea,him);
+        if Fselection > fireLastFrame(1,fireToEditNo)
+            fireLastFrame(1,fireToEditNo)=Fselection
+        end
         if editMode==1
             BI{Fselection}(Mask == 1) = 1;
         elseif editMode==2
@@ -119,7 +122,6 @@ editMode=1; allFrames=0; fireToEditNo=1;
         end
         BI{Fselection}(MaskROI == 0) = 0;
         [Bn,~,N] = bwboundaries(BI{Fselection},'noholes',8);
-        
         
         SizeDetFires=zeros(1,N);
         for s=1:N

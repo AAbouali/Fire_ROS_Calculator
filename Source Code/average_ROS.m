@@ -46,8 +46,9 @@ heditResult    = uicontrol(panel,'Style','edit','Units','normalized','Position',
               'Enable','off' );
 hcalculte   = uicontrol(panel,'Style','pushbutton','String','Calculate ROS','Units','normalized',...
               'Position',[0.77,0.45,0.2,0.1],'callback',{@calculate_Callback});
-haxis       = axes(panel,'box','off','xtick',[],'ytick',[],'ztick',[],'xcolor',[1 1 1],'ycolor',[1 1 1],...
-              'Position',[0.05,0.15,0.70,0.8],'color','white','PlotBoxAspectRatio',[1 1 1]);
+haxis       = axes(panel,'box','off','Xgrid','on','Ygrid','on',...
+              'Position',[0.1,0.2,0.65,0.75],'color','white','PlotBoxAspectRatio',[1 1 1]); haxis.YLabel.String = 'mm'; haxis.XLabel.String = 'mm';
+             %'xtick',[],'ytick',[],'ztick',[],'xcolor',[1 1 1],'ycolor',[1 1 1],
           
 c = uicontextmenu;
 haxis.UIContextMenu = c;
@@ -215,10 +216,12 @@ PFframe=0;PLframe=0;lineError=0;
             resultrow=resultrow+1;
             results(resultrow,1:size(lineROfS,2))=num2cell(lineROfS(1,:)/10);
             resultrow=resultrow+2;
+            
             %svaing a figure showing where this ROS was calculated
             figure('Visible','off');
             hf2=figure('Visible','off','Position',[28,66,700,540]); haxesROS=axes(hf2);
-            haxesROS.Box='off';haxesROS.XTick=[];haxesROS.YTick=[];haxesROS.ZTick=[];haxesROS.XColor='none';haxesROS.YColor='none';
+            haxesROS.Box='off';haxesROS.YLabel.String = 'mm'; haxesROS.XLabel.String = 'mm'; haxesROS.XGrid='on';haxesROS.YGrid='on';
+            %haxesROS.XTick=[];haxesROS.YTick=[];haxesROS.ZTick=[];haxesROS.XColor='none';haxesROS.YColor='none';
             title('Postion of the lines where the ROS was calculated along them');
             hold on
             for k=1:Nfires

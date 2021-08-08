@@ -22,23 +22,24 @@
 %    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 function draw_frame
-global cornersnum Xcorners Ycorners framespathname
+global cornersnum Xcorners Ycorners framespathname ployhandle
 %%
 [JPGcorners, JPGcorners_pathname] = uigetfile({'*.jpg;*.tif;*.png;*.gif;*.bmp','All Image Files';...
     '*.*','All Files' },'Select an image to detect the corners of the bed from it',framespathname);
 
 hcornersF=figure('Visible','off','Units','normalized');
 haxis = axes(hcornersF,'Units','normalized','Position',[0,0.15,1,0.8]);
-htextNumber  = uicontrol(hcornersF,'Style','text','String','Bed Corners number:','Units','normalized',...
-    'FontWeight','bold','FontSize',10,'Position',[0.1,0.01,0.25,0.06]);
-heditNumber  = uicontrol('Style','edit','Units','normalized','Position',[0.36,0.01,0.2,0.08],'FontSize',10,'callback',{@number_Callback});
+% htextNumber  = uicontrol(hcornersF,'Style','text','String','Bed Corners number:','Units','normalized',...
+%     'FontWeight','bold','FontSize',10,'Position',[0.1,0.01,0.25,0.06]);
+% heditNumber  = uicontrol('Style','edit','Units','normalized','Position',[0.36,0.01,0.2,0.08],'FontSize',10,'callback',{@number_Callback});
 hok   = uicontrol('Style','pushbutton','String','OK','Units','normalized',...
     'Position',[0.7,0.01,0.2,0.08],'callback',{@ok_Callback});
 cornersimage=imread(fullfile(JPGcorners_pathname,JPGcorners)); himage=image(haxis,cornersimage);
+axis image;
 haxis.Box='off';haxis.XTick=[];haxis.YTick=[];haxis.ZTick=[];haxis.XColor=[1 1 1];haxis.YColor=[1 1 1];
-c = uicontextmenu;
-himage.UIContextMenu = c;
-m1 = uimenu(c,'Label','Add Lines','Callback',@drawLines,'Enable','off');
+% c = uicontextmenu;
+% himage.UIContextMenu = c;
+% m1 = uimenu(c,'Label','Add Lines','Callback',@drawLines,'Enable','off');
 
 hcornersF.Name = 'Draw the Frame';
 movegui(hcornersF,'center')
@@ -46,31 +47,38 @@ hcornersF.MenuBar = 'none';
 hcornersF.ToolBar = 'none';
 hcornersF.NumberTitle='off';
 hcornersF.Visible = 'on';
-
-    function number_Callback(src,event)
-        cornersnum=str2double(get(heditNumber,'String'));
-        m1.Enable='on';
-    end
-    function drawLines(src,event)
-        global handles
-        handles.frame = cell(cornersnum);
-        for k=1:cornersnum
-            handles.frame{k} = imline(haxis);
-        end
-    end
+ployhandle = impoly(haxis);
+%     function number_Callback(src,event)
+%         cornersnum=str2double(get(heditNumber,'String'));
+%         m1.Enable='on';
+%     end
+%     function drawLines(src,event)
+%         global handles
+% %         handles.frame = cell(cornersnum);
+% %         for k=1:cornersnum
+% %             handles.frame{k} = imline(haxis);
+% %         end
+%         handles = impoly(haxis);
+%     end
     function ok_Callback(src,event)
         Xcorners=[];Ycorners=[];
-        global handles
-        posline=cell(cornersnum);
-        Xcorners=zeros(cornersnum+1,1);
-        Ycorners=zeros(cornersnum+1,1);
-        for i=1:cornersnum
-            posline{i} = getPosition(handles.frame{i});
-        end
-        for i=1:cornersnum
-            Xcorners(i,1)=posline{i}(1,1);
-            Ycorners(i,1)=posline{i}(1,2);
-        end
+%         posline=cell(cornersnum);
+%         Xcorners=zeros(cornersnum+1,1);
+%         Ycorners=zeros(cornersnum+1,1);
+%         for i=1:cornersnum
+%             posline{i} = getPosition(handles.frame{i});
+%         end
+%         for i=1:cornersnum
+%             Xcorners(i,1)=posline{i}(1,1);
+%             Ycorners(i,1)=posline{i}(1,2);
+%         end
+%         Xcorners(cornersnum+1,1)=Xcorners(1,1);
+%         Ycorners(cornersnum+1,1)=Ycorners(1,1);
+        
+        positions=getPosition(ployhandle);
+        cornersnum=size(positions,1);
+        Xcorners(:,1)=positions(:,1);
+        Ycorners(:,1)=positions(:,2);
         Xcorners(cornersnum+1,1)=Xcorners(1,1);
         Ycorners(cornersnum+1,1)=Ycorners(1,1);
         close(hcornersF)

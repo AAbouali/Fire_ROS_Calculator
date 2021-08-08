@@ -24,19 +24,7 @@
 function build_prop_map
 global Xworld Yworld numframes shape XcornersWorld YcornersWorld cornersnum resultsfolder plotcolors linestyles time man_mod
 global R t cameraParams ffpoints fflineeq loudstatuse workpathname work X Y Xcorners Ycorners appPath Nfires fireLastFrame smooth
-if loudstatuse==1
-    load([workpathname,work])
-    %%%
-    %if loading a session made by version 1.0 or 1.1
-    %load([workpathname,work],'XcornersWorld', 'YcornersWorld', 'ffpoints', 'fflineeq', 'time', 'R', 't', 'cameraParams', 'Xworld', 'Yworld', 'X', 'Y',...
-    %    'numframes', 'Xcorners', 'Ycorners', 'shape')
-    %Xnew=cell(1,numframes); Ynew=cell(1,numframes); Xworldnew=cell(1,numframes); Yworldnew=cell(1,numframes); eqnew=cell(1,numframes);
-    %for i=1:numframes
-    %    Xnew{i}=X(:,i); Ynew{i}=Y(:,i); Xworldnew{i}=Xworld(:,i); Yworldnew{i}=Yworld(:,i); eqnew{i}(:,1:2)=fflineeq(:,2*i-1:2*i);
-    %end
-    %X=Xnew; Y=Ynew; Xworld=Xworldnew; Yworld=Yworldnew; fflineeq=eqnew;
-    %%%%
-end
+
 load plotcolorsmat.mat
 textColor={'black';'yellow';'magenta';'cyan';'red';'green';'blue';'white'};
 %% building the GUI
@@ -134,8 +122,18 @@ smoothX=cell(Nfires,numframes);
 smoothY=cell(Nfires,numframes);
 for k=1:Nfires
     for i=1:fireLastFrame(1,k)
-        smoothX{k,i} = sgolayfilt(Xworld{k,i}, 2, 45);
-        smoothY{k,i} = sgolayfilt(YworldPr{k,i}, 2, 45);
+        framelength1= round(size(Xworld{k,i},1)/15);
+        if mod(framelength1,2)==0
+            framelength1=framelength1+1;
+        end
+        if framelength1>size(Xworld{k,i},1)
+            framelength1=size(Xworld{k,i},1);
+        end
+        if framelength1<=5
+            framelength1=5+2;
+        end
+        smoothX{k,i} = sgolayfilt(Xworld{k,i}, 5, framelength1);
+        smoothY{k,i} = sgolayfilt(YworldPr{k,i}, 5, framelength1);
     end
 end
 smooth=0;
@@ -208,22 +206,52 @@ smooth=0;
         if smoothDegree==1
             for k=1:Nfires
                 for i=1:fireLastFrame(1,k)
-                    smoothX{k,i} = sgolayfilt(Xworld{k,i}, 5, 45);
-                    smoothY{k,i} = sgolayfilt(YworldPr{k,i}, 5, 45);
+                    framelength1= round(size(Xworld{k,i},1)/15);
+                    if mod(framelength1,2)==0
+                        framelength1=framelength1+1;
+                    end
+                    if framelength1>size(Xworld{k,i},1)
+                        framelength1=size(Xworld{k,i},1);
+                    end
+                    if framelength1<=5
+                        framelength1=5+2;
+                    end
+                    smoothX{k,i} = sgolayfilt(Xworld{k,i}, 5, framelength1);
+                    smoothY{k,i} = sgolayfilt(YworldPr{k,i}, 5, framelength1);
                 end
             end
         elseif smoothDegree==2
             for k=1:Nfires
                 for i=1:fireLastFrame(1,k)
-                    smoothX{k,i} = sgolayfilt(Xworld{k,i}, 5, 87);
-                    smoothY{k,i} = sgolayfilt(YworldPr{k,i}, 5, 87);
+                    framelength2= round(size(Xworld{k,i},1)/10);
+                    if mod(framelength2,2)==0
+                        framelength2=framelength2+1;
+                    end
+                    if framelength2>size(Xworld{k,i},1)
+                        framelength2=size(Xworld{k,i},1);
+                    end
+                    if framelength2<=5
+                        framelength2=5+2;
+                    end
+                    smoothX{k,i} = sgolayfilt(Xworld{k,i}, 5, framelength2);
+                    smoothY{k,i} = sgolayfilt(YworldPr{k,i}, 5, framelength2);
                 end
             end
         else
             for k=1:Nfires
                 for i=1:fireLastFrame(1,k)
-                    smoothX{k,i} = sgolayfilt(Xworld{k,i}, 5, 167);
-                    smoothY{k,i} = sgolayfilt(YworldPr{k,i}, 5, 167);
+                    framelength3= round(size(Xworld{k,i},1)/5);
+                    if mod(framelength3,2)==0
+                        framelength3=framelength3+1;
+                    end
+                    if framelength3>size(Xworld{k,i},1)
+                        framelength3=size(Xworld{k,i},1);
+                    end
+                    if framelength3<=5
+                        framelength3=5+2;
+                    end
+                    smoothX{k,i} = sgolayfilt(Xworld{k,i}, 5, framelength3);
+                    smoothY{k,i} = sgolayfilt(YworldPr{k,i}, 5, framelength3);
                 end
             end
         end

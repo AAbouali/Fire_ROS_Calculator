@@ -22,7 +22,7 @@
 %    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 function man_detect
-global XcornersWorld YcornersWorld answer_rep ffpoints fflineeq time R t cameraParams Xworld Yworld X Y squareSize bwporig numframes framefiles checkf calibrationFile namedrawfront
+global XcornersWorld YcornersWorld answer_rep ffpoints fflineeq time R t cameraParams Xworld Yworld X Y squareSize bwporig numframes framefiles checkf calibrationFile namedrawfront MaskROI
 global Xcorners Ycorners project_name shape cornersnum localtime resultsfolder results imagesUsed drawfront repeatF images resultrow AngleWorld Lworld frame_corr frame Nfires fireLastFrame
 %% Detect the fire front on each frame
 if drawfront==1
@@ -32,7 +32,7 @@ if drawfront==1
     end
 end
 Nfires=1;
-fireLastFrame=numframes;
+fireLastFrame(1,1)=numframes;
 ffpoints=100; %number of points that will present the fire front as set of straight lines that connecting these points
 % ffpoints can be increased if the used is going to detect the fire front
 % by nore than 150 lines (which is very hard to happen)
@@ -40,10 +40,11 @@ X=cell(1,numframes);
 Y=cell(1,numframes);
 Xworld=cell(1,numframes);
 Yworld=cell(1,numframes);
+MaskROI = roipoly(frame{1},Xcorners(1:(end-1),1),Ycorners(1:(end-1),1));
 %for the first frame
 answer_rep=2;
 while answer_rep==2
-    figure('units','normalized','outerposition',[0 0 1 1],'NumberTitle','off','MenuBar','none','ToolBar','none')
+    figure('units','normalized','outerposition',[0 0 1 1],'NumberTitle','off','MenuBar','none','ToolBar','none');
     imshow(frame{1},'InitialMagnification', 'fit');
     title(sprintf('Detect the Fire Front on Frame no %d' , 1));
     if shape~=4
@@ -53,7 +54,14 @@ while answer_rep==2
         end
         hold off
     end
-    [X{1},Y{1},c] = improfile(ffpoints);
+    handles = impoly();
+    pos=getPosition(handles);
+    BI{1} = roipoly(frame{1},pos(:,1),pos(:,2));
+    BI{1}(MaskROI == 0) = 0;
+    Bn = bwboundaries(BI{1},'noholes',8);
+    X{1}=Bn{1}(:,2);
+    Y{1}=Bn{1}(:,1);
+    %[X{1},Y{1},c] = improfile(ffpoints);
     imagePoints(:,1)=X{1};
     imagePoints(:,2)=Y{1};
     worldPoints = pointsToWorld(cameraParams, R, t, imagePoints);
@@ -63,26 +71,12 @@ while answer_rep==2
     repeat_selection
     waitfor(repeatF)
 end
-%saving the first frame with fire front
-if drawfront==1
-    ff = figure('visible','off'); haxesff=axes(ff);
-    image(haxesff,frame{1});
-    hold on
-    line(haxesff,X{1},Y{1},'Color','g','LineWidth',1.2)
-    hold off
-    haxesff.Box='off';haxesff.XTick=[];haxesff.YTick=[];haxesff.ZTick=[];haxesff.XColor=[1 1 1];haxesff.YColor=[1 1 1];haxesff.Position=[0 0 1 1];
-    FileName = [namedrawfront,'1.png'];
-    frontFrame = getframe(haxesff);
-    frontIamge = frame2im(frontFrame);
-    frontIamge = imresize(frontIamge, [NaN 640]) ;
-    imwrite(frontIamge,[resultsfolder,'\',namedrawfront,'\',FileName],'png')
-    %print(ff, '-r110', '-dpng', [resultsfolder,'\',namedrawfront,'\',FileName]);
-end
 
 %for the rest of the frames
 for i=2:numframes
     answer_rep=2;
     while answer_rep==2
+        imagePoints=[];bn=[];pos=[];handles=[];
         figure('units','normalized','outerposition',[0 0 1 1],'NumberTitle','off','MenuBar','none','ToolBar','none')
         imshow(frame{i},'InitialMagnification', 'fit');
         title(sprintf('Detect the Fire Front on Frame no %d' , i));
@@ -92,7 +86,16 @@ for i=2:numframes
             line([Xcorners(j,1),Xcorners(j+1,1)],([Ycorners(j,1),Ycorners(j+1,1)]),'Color','b','LineWidth',2)
         end
         hold off
-        [X{i},Y{i},c] = improfile(ffpoints);
+        handles = impoly();
+        pos=getPosition(handles);
+        BI{i} = roipoly(frame{i},pos(:,1),pos(:,2));
+        BI{i}(MaskROI == 0) = 0;
+        diff=abs(BI{i}-BI{i-1});
+        BI{i}=BI{i-1}+diff;
+        Bn = bwboundaries(BI{i},'noholes',8);
+        X{i}=Bn{1}(:,2);
+        Y{i}=Bn{1}(:,1);  
+        %[X{i},Y{i},c] = improfile(ffpoints);
         imagePoints(:,1)=X{i};
         imagePoints(:,2)=Y{i};
         worldPoints = pointsToWorld(cameraParams, R, t, imagePoints);
@@ -101,14 +104,21 @@ for i=2:numframes
         close
         repeat_selection
         waitfor(repeatF)
-    end
-    
-    %saving the frames with fire front
-    if drawfront==1
+    end  
+end
+
+%saving the frames with drawn fire front
+if drawfront==1
+    fff = figure('visible','off'); haxesff=axes(fff);
+    for i=1:numframes
         image(haxesff,frame{i});
         hold on
         for j=1:i
-            line(X{j},Y{j},'Color','g','LineWidth',1.2)
+            for k=1:Nfires
+                if j<=fireLastFrame(1,k)
+                    line(haxesff,X{k,j}(:,1),Y{k,j}(:,1),'Color','g','LineWidth',1.2)
+                end
+            end
         end
         for j=1:cornersnum
             line(haxesff,[Xcorners(j,1),Xcorners(j+1,1)],([Ycorners(j,1),Ycorners(j+1,1)]),'Color','b','LineWidth',2)
@@ -118,13 +128,11 @@ for i=2:numframes
         FileName = sprintf([namedrawfront,'%d.png'], i);
         frontFrame = getframe(haxesff);
         frontIamge = frame2im(frontFrame);
-        frontIamge = imresize(frontIamge, [NaN 640]) ;
+        frontIamge = imresize(frontIamge, [NaN size(frame{i},2)]) ;
         imwrite(frontIamge,[resultsfolder,'\',namedrawfront,'\',FileName],'png')
         %print(ff, '-r110', '-dpng', [resultsfolder,'\',namedrawfront,'\',FileName]);
     end
-end
-if drawfront==1
-    close(ff)
+    close(fff)
 end
 
 
@@ -132,9 +140,9 @@ end
 fflineeq=cell(1,numframes);
 burndarea=cell(Nfires,numframes);
 for i=1:numframes
-    for j=1:ffpoints-1
-        fflineeq{i}(j,:) = polyfit([Xworld{i}(j,1) Xworld{i}(j+1,1)],[Yworld{i}(j,1) Yworld{i}(j+1,1)],1);
-    end
+%     for j=1:size(Xworld{k,i},1)-1
+%         fflineeq{1,i}(j,:) = polyfit([Xworld{i}(j,1) Xworld{i}(j+1,1)],[Yworld{i}(j,1) Yworld{i}(j+1,1)],1);
+%     end
     %determining the area burned on each frame
     burndarea{1,i}=(polyarea(Xworld{1,i},Yworld{1,i}))*10^-6;
 end
@@ -150,7 +158,7 @@ for i=1:numframes
     results{6,1+i}=num2str(i);
 end
 results{7,1}=sprintf('Fire%d Area (m^2)',1);
-for i=1:fireLastFrame(1,k)
+for i=1:fireLastFrame(1,1)
     results{7,1+i}= num2str(burndarea{1,i});
 end
 resultrow=8+Nfires;

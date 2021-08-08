@@ -40,10 +40,26 @@ Yworld=cell(Nfires,numframes);
 % convert frames to binaries
 BI=cell(1,numframes);
 fireLastFrame(1,1:Nfires)=numframes;
+
+
 for i=1:numframes
     BW = rgb2gray(frame{i});
     BI{i} = imbinarize(BW,detSens);
 end
+
+% figure();
+% imshow(frame{1});
+% ff=imfreehand();
+% foremask = createMask(ff,frame{1});
+% bb=imfreehand();
+% backmask = createMask(bb,frame{1});
+% 
+% for i=1:numframes
+%     L = superpixels(frame{i},500);
+%     BI{i} = lazysnapping(frame{i},L,foremask,backmask);
+%     figure
+%     imshow(BI{i})
+% end
 
 MaskROI = roipoly(BI{1},Xcorners(1:(end-1),1),Ycorners(1:(end-1),1)); % determine the region of interest
 
@@ -57,7 +73,9 @@ BI{1} = imfill(BI{1},'holes');
 BI{1}(MaskROI == 0) = 0;
 [Bn,~,N] = bwboundaries(BI{1},'noholes',8);
 Bnd=cell(Nfires);
-if N>1
+%figure
+%imshow(BI{1})
+if N>=1
     SizeDetFires=zeros(1,N);
     for k=1:N
         %SizeDetFires(1,k)=bwarea(Bn{k,1});
@@ -71,7 +89,7 @@ if N>1
         PrevSizeDetFires(1,k)=SizeDetFires(1,order(1,k));
     end
 else
-    hW = warndlg(sprintf('No %d fires detected on the first frame',Nfires),'Error!','modal');
+    hW = warndlg(sprintf('Fire number %d was not detected on the first frame',Nfires),'Error!','modal');
     jframe=get(hW,'javaframe'); jframe.setFigureIcon(javax.swing.ImageIcon(fullfile(appPath,'icon ROS.gif')));
     return
 end
@@ -200,10 +218,10 @@ fflineeq=cell(Nfires,numframes);
 burndarea=cell(Nfires,numframes);
 for k=1:Nfires
     for i=1:fireLastFrame(1,k)
-        waitbar((2*numframes+i)/(numframes*3),hwait,sprintf('Determining fire front X-Y coordinates for frame %d ...',i))
-        for j=1:size(Xworld{k,i},1)-1
-            fflineeq{k,i}(j,:) = polyfit([Xworld{k,i}(j,1) Xworld{k,i}(j+1,1)],[Yworld{k,i}(j,1) Yworld{k,i}(j+1,1)],1);
-        end
+%         waitbar((2*numframes+i)/(numframes*3),hwait,sprintf('Determining fire front X-Y coordinates for frame %d ...',i))
+%         for j=1:size(Xworld{k,i},1)-1
+%             fflineeq{k,i}(j,:) = polyfit([Xworld{k,i}(j,1) Xworld{k,i}(j+1,1)],[Yworld{k,i}(j,1) Yworld{k,i}(j+1,1)],1);
+%         end
         %determining the area burned on each frame
         burndarea{k,i}=(polyarea(Xworld{k,i},Yworld{k,i}))*10^-6;
     end

@@ -23,7 +23,7 @@
 function Fire_ROS_Calculator
 global Xcorners Ycorners pathname calibrationFile numframes framefiles bwporig TimeSelection shape localtime results resultrow resultsfolder frames appPath checkimage videoObject
 global drawfront project_name cornersnum MainF images squareSize imagesUsed workpathname work loudstatuse AngleWorld Lworld CLworld cameraParams calibList hwait man_mod interval errors
-global XcornersWorld YcornersWorld ffpoints fflineeq time R t Xworld Yworld X Y Nfires fireLastFrame
+global XcornersWorld YcornersWorld ffpoints fflineeq time R t Xworld Yworld X Y Nfires fireLastFrame calibMode
 %% read files 
 if isdeployed && ispc
     [~, result] = system('path');
@@ -63,28 +63,32 @@ htabEvaluate = uitab('Parent', htgroup, 'Title', '  Camera Calibration  ');
 % Inputs panel (left)
 hpanelInput=uipanel(htabNew,'Units','pixels','Title','Inputs','FontSize',10,'Position',[0,0,450,615]);
 htextPname  = uicontrol(hpanelInput,'Style','text','String','Session Name:',...
-    'FontSize',11,'FontWeight','bold','Position',[80,555,115,25]);
-heditPname  = uicontrol(hpanelInput,'Style','edit','Position',[198,555,180,25],'FontSize',10,'FontWeight','bold');
+    'FontSize',11,'FontWeight','bold','Position',[80,567,115,25]);
+heditPname  = uicontrol(hpanelInput,'Style','edit','Position',[198,567,180,25],'FontSize',10,'FontWeight','bold');
 htextIcalib  = uicontrol(hpanelInput,'Style','text','String','Camera Parameters:',...
-    'FontSize',11,'Position',[13,505,140,24]);
+    'FontSize',11,'Position',[13,525,140,24]);
 hpopCalib  = uicontrol(hpanelInput,'Style','pop','Units','pixels','String',calibList,...
-    'value',size(calibList,2),'FontSize',10,'Position',[155,505,150,25],'callback',{@popCalib_Callback});
+    'value',size(calibList,2),'FontSize',10,'Position',[155,525,150,25],'callback',{@popCalib_Callback});
 hbuttonIcalib  = uicontrol(hpanelInput,'Style','pushbutton','String','Load Camera P.','FontSize',10,...
-    'Position',[315,505,115,25],'callback',{@buttonIcalib_Callback});
+    'Position',[315,525,115,25],'callback',{@buttonIcalib_Callback});
 htextIframes  = uicontrol(hpanelInput,'Style','text','String','  Fire Front Images:',...
-    'FontSize',11,'Position',[13,470,140,24]);
-heditIframes  = uicontrol(hpanelInput,'Style','edit','Position',[155,470,180,25],'FontSize',10);
+    'FontSize',11,'Position',[13,490,140,24]);
+heditIframes  = uicontrol(hpanelInput,'Style','edit','Position',[155,490,180,25],'FontSize',10);
 hbuttonIframes  = uicontrol(hpanelInput,'Style','pushbutton','String','Add Frames','FontSize',10,...
-    'Position',[345,470,85,25],'callback',{@buttonIframes_Callback});
+    'Position',[345,490,85,25],'callback',{@buttonIframes_Callback});
 htextIbed  = uicontrol(hpanelInput,'Style','text','String',' Surface Ref. Image:',...
-    'FontSize',11,'Position',[13,435,140,24]);
-heditIbed  = uicontrol(hpanelInput,'Style','edit','Position',[155,435,180,25],'FontSize',10);
+    'FontSize',11,'Position',[13,455,140,24]);
+heditIbed  = uicontrol(hpanelInput,'Style','edit','Position',[155,455,180,25],'FontSize',10);
 hbuttonIbed  = uicontrol(hpanelInput,'Style','pushbutton','String','Add Image','FontSize',10,...
-    'Position',[345,435,85,25],'callback',{@buttonIbed_Callback});
+    'Position',[345,455,85,25],'callback',{@buttonIbed_Callback});
+hcheckRef = uicontrol(hpanelInput,'Style','checkbox','String','Use Checkerboard for Referencing',...
+    'FontSize',9.5,'Value',1,'Position',[40 420 320 23],'callback',{@checkRef_Callback});
+hbuttonDetRef  = uicontrol(hpanelInput,'Style','pushbutton','String','Detect Ref. Points','FontSize',10,...
+    'Position',[290,420,130,25],'callback',{@buttonDetRef_Callback},'Enable','off');
 htextSize  = uicontrol(hpanelInput,'Style','text','String','Size of the Checkerboard Square:',...
-    'FontSize',11,'Position',[45,390,240,24]);
-heditSize  = uicontrol(hpanelInput,'Style','edit','Position',[277,390,70,25],'FontSize',10);
-htextMm  = uicontrol(hpanelInput,'Style','text','String','mm','FontSize',11,'Position',[349,390,28,24]);
+    'FontSize',10,'Position',[45,387,240,24]);
+heditSize  = uicontrol(hpanelInput,'Style','edit','Position',[277,387,70,25],'FontSize',10);
+htextMm  = uicontrol(hpanelInput,'Style','text','String','mm','FontSize',10.5,'Position',[349,387,28,24]);
 %time Group
 hbgTime     = uibuttongroup(hpanelInput,'Units','pixels','Title','Time Lapse','FontSize',10,'Position',[100 295 260 90],'SelectionChangedFcn',@selectionTime);
 hradioConstant    = uicontrol(hbgTime  ,'Style','radiobutton','String','Constant Lapse','Position',[15 44 110 23],'FontSize',10);
@@ -321,6 +325,8 @@ TimeSelection=1;
 resultrow=5;
 results=cell(0);
 loudstatuse=0;
+calibMode=1;
+pathname=convertCharsToStrings(appPath);
 
     function MainF_CloseRequestFcn(src,event)
         check_exit
@@ -336,25 +342,50 @@ loudstatuse=0;
         end
     end
     function buttonIcalib_Callback(src,event)
-        [calibrationName, pathname] = uigetfile({'*.mat','MAT file';'*.*','All Files' },'Select a Saved Calibration ');
+        [calibrationName, pathname] = uigetfile({'*.mat','MAT file';'*.*','All Files' },'Select a Saved Calibration ',pathname);
         calibrationFile = fullfile(pathname , calibrationName);
+        if pathname==0
+            pathname=convertCharsToStrings(appPath);
+        end
     end
     function buttonIframes_Callback(src,event)
-        global framespathname
-        [frames, framespathname] = uigetfile({'*.jpg;*.tif;*.png;*.gif','All Image Files';...
+        [frames, pathname] = uigetfile({'*.jpg;*.tif;*.png;*.gif','All Image Files';...
             '*.*','All Files' },'Select the Frames','MultiSelect', 'on',pathname);
-        framefiles=fullfile(framespathname,frames);
+        framefiles=fullfile(pathname,frames);
         numframes = numel(frames);
-        set(heditIframes,'String',framespathname);
+        set(heditIframes,'String',pathname);
         laps = str2double(get(heditLaps,'String'));
         localtime(1,(1:numframes-1))=laps;
+        if pathname==0
+            pathname=convertCharsToStrings(appPath);
+        end
     end
     function buttonIbed_Callback(src,event)
-        global framespathname
         [bwp, bwp_pathname] = uigetfile({'*.jpg;*.tif;*.png;*.gif','All Image Files';...
-            '*.*','All Files' },'Select the Fuel Bed Image with Pattern',framespathname);
+            '*.*','All Files' },'Select the Fuel Bed Image with Pattern',pathname);
         bwporig = imread(fullfile(bwp_pathname,bwp));
         set(heditIbed,'String',bwp);
+    end
+    function checkRef_Callback(src,event)
+        set(MainF, 'pointer', 'watch')
+        calibMode=get(hcheckRef,'value');
+        if calibMode==0
+            hbuttonDetRef.Enable='on';
+            heditSize.Enable='off';
+        else
+            hbuttonDetRef.Enable='off';
+            heditSize.Enable='on';
+        end
+        set(MainF, 'pointer', 'arrow')
+    end
+    function buttonDetRef_Callback(src,event)
+        global Xref Yref imref
+        %imref = undistortImage(bwporig, cameraParams);
+        figure('NumberTitle','off','Name','Adjusting Scale'); imshow(bwporig,'InitialMagnification', 'fit');
+        title('Detect refrance points (Click Enter after last point to finish)');
+        [Xref,Yref] = getpts;
+        close
+        enter_ref_points
     end
     function selectionTime(src,event)
         selection=event.NewValue.String;
@@ -406,9 +437,8 @@ loudstatuse=0;
         end
     end
     function buttonDetect_Callback(src,event)
-        global framespathname
         [JPGcorners, JPGcorners_pathname] = uigetfile({'*.jpg;*.tif;*.png;*.gif;*.bmp','All Image Files';...
-            '*.*','All Files' },'Select an image to detect the corners of the bed from it',framespathname);
+            '*.*','All Files' },'Select an image to detect the corners of the bed from it',pathname);
         checkimage=fullfile(JPGcorners_pathname,JPGcorners);
         hcornersF=figure('NumberTitle','off'); imshow(checkimage,'InitialMagnification', 'fit');
         title('Detect one edge (length) of the the bed');
@@ -428,14 +458,14 @@ loudstatuse=0;
         set(MainF, 'pointer', 'arrow')
     end
     function buttonSelect_Callback(src,event)
-        global framespathname
-        resultsfolder = uigetdir(framespathname,'Select a Folder To Save the Results On');
+        resultsfolder = uigetdir(pathname,'Select a Folder To Save the Results On');
         set(heditResults,'String',resultsfolder);
         hbuttonCalibrateM.Enable='on';
         hbuttonCalibrateA.Enable='on';
     end
     function buttonCalibrateM_Callback(src,event)
         global cancelProc
+        resultrow=5;results=cell(0);
         if size(imread(framefiles{1}))==size(bwporig)
             man_mod=1;
             set(MainF, 'pointer', 'watch');drawnow;
@@ -461,6 +491,7 @@ loudstatuse=0;
     end
     function buttonCalibrateA_Callback(src,event)
         global cancelProc detSens
+        resultrow=5;results=cell(0);
         if size(imread(framefiles{1}))==size(bwporig)
             man_mod=0;
             hwait = waitbar(0,'Calibrating...','Name','Automatic fire front detection');
@@ -523,7 +554,7 @@ loudstatuse=0;
             heditLaps.Enable='on'; hbuttonLaps.Enable='off'; hbuttonCalibrateM.Enable='off'; hbuttonCalibrateA.Enable='off';
             hbuttonAROS.Enable='off'; hbuttonDROS.Enable='off'; hbuttonDist.Enable='off'; hbuttonMap.Enable='off';
             hbuttonIso.Enable='off'; hbuttonCheck.Enable='off'; hbuttonSaveE.Enable='off'; htextSave.Visible='off';
-            shape=4;TimeSelection=1;resultrow=5;results=cell(0); loudstatuse=0;
+            shape=3;TimeSelection=1;resultrow=5;results=cell(0); loudstatuse=0;
             Xcorners=[]; Ycorners=[]; pathname=[]; filesim=[]; numframes=[]; framefiles=[]; bwporig=[]; TimeSelection=[]; localtime=[];
             resultsfolder=[]; drawfront=0; project_name=[]; cornersnum=[]; images=[]; XcornersWorld=[]; YcornersWorld=[]; ffpoints=[];
             fflineeq=[]; time=[]; R=[]; t=[]; cameraParams=[]; Xworld=[]; Yworld=[]; X=[]; Y=[];
@@ -538,7 +569,7 @@ loudstatuse=0;
 
 %% interactive controls for the load panel (load project Tab)
     function buttonLprojcet_Callback(src,event)  
-        [work, workpathname] = uigetfile('*.mat','Load a Session');
+        [work, workpathname] = uigetfile('*.mat','Load a Session',pathname);
         loudstatuse=1;
         set(heditLprojcet,'String',work);
         load([workpathname,work])
@@ -557,7 +588,7 @@ loudstatuse=0;
         global MatchMode MatchFile
         MatchMode=get(hpopModeMat,'value');
         if MatchMode==2
-            [MatchName, Matchpathname] = uigetfile({'*.mat','MAT file';'*.*','All Files' },'Select a Saved Cropping Setting ');
+            [MatchName, Matchpathname] = uigetfile({'*.mat','MAT file';'*.*','All Files'},'Select a Saved Cropping Setting ',pathname);
             MatchFile=fullfile(Matchpathname,MatchName);
             hbuttonIref.Enable='off'; hbuttonAdjust.Enable='off'; hbuttonMatch.Enable='on';
             hbuttonIcorr.Enable='off'; heditIref.Enable='off'; heditIcorr.Enable='off';
@@ -568,14 +599,20 @@ loudstatuse=0;
     function buttonIcrop_Callback(src,event)
         global Mfilesim Mimages
         [Mimages, Mpathname] = uigetfile({'*.jpg;*.tif;*.png;*.gif','All Image Files';...
-            '*.*','All Files' },'Select Images to be cropped','MultiSelect', 'on');
+            '*.*','All Files' },'Select Images to be cropped','MultiSelect', 'on',pathname); 
+        if isempty(pathname)~=1
+            pathname=Mpathname;
+        end
         set(heditIcrop,'String',Mpathname);
         Mfilesim = fullfile(Mpathname , Mimages);  
     end
     function buttonIref_Callback(src,event)
         global jpgim
         [jpg, jpg_pathname] = uigetfile({'*.jpg;*.tif;*.png;*.gif','All Image Files';...
-            '*.*','All Files' },'Select an image from the images need to br crop');
+            '*.*','All Files' },'Select an image from the images need to br crop',pathname);
+        if isempty(pathname)~=1
+            pathname=jpg_pathname;
+        end
         jpgim = imread(fullfile(jpg_pathname,jpg));
         set(heditIref,'String',jpg_pathname);
         hbuttonAdjust.Enable='on';
@@ -583,7 +620,7 @@ loudstatuse=0;
     function buttonIcorr_Callback(src,event)
         global irim
         [ir, ir_pathname] = uigetfile({'*.jpg;*.tif;*.png;*.gif','All Image Files';...
-            '*.*','All Files' },'Select and Image to Match the images to it (correct one)');
+            '*.*','All Files' },'Select and Image to Match the images to it (correct one)',pathname);
         irim = imread(fullfile(ir_pathname,ir));
         set(heditIcorr,'String',ir_pathname);
     end
@@ -593,7 +630,7 @@ loudstatuse=0;
     end
     function buttonDir_Callback(src,event)
         global Iresultsfolder
-         Iresultsfolder = uigetdir('C:\','Select a Folder To Save the Images On');
+         Iresultsfolder = uigetdir(pathname,'Select a Folder To Save the Images On');
          set(heditDir,'String',Iresultsfolder);
     end
     function buttonAdjust_Callback(src,event)
@@ -663,7 +700,7 @@ loudstatuse=0;
 %% interactive controls for the Extracting Tab
     function buttonVideo_Callback(src,event)
         global movieFullFileName startTime endTime DimRatio vidHeight vidWidth
-        [videoName, pathname] = uigetfile({'*.*','All Files' },'Select a video file');
+        [videoName, pathname] = uigetfile({'*.*','All Files' },'Select a video file',pathname);
         movieFullFileName = fullfile(pathname , videoName);
         set(heditVideo,'String',videoName);
         videoObject = VideoReader(movieFullFileName);
@@ -673,16 +710,22 @@ loudstatuse=0;
         endTime=[0 0];
         set(heditDRow,'String',num2str(videoObject.Height))
         set(heditDCol,'String',num2str(videoObject.Width))
+        if isempty(pathname)
+            pathname=convertCharsToStrings(appPath);
+        end
     end
 
     function buttonRes_Callback(src,event)
         global Savefolder
-        Savefolder = uigetdir('C:\','Select a Folder To Save the Results On');
+        Savefolder = uigetdir(pathname,'Select a Folder To Save the Results On');
         set(heditRes,'String',Savefolder);
     end
 
     function editStime1_Callback(src,event)
         global startTime endTime
+        endTime(1,2)=str2double(get(heditEtime2,'String'));
+        endTime(1,1)=str2double(get(heditEtime1,'String'));
+        startTime(1,2)=str2double(get(heditStime2,'String'));
         startTime(1,1)=str2double(get(heditStime1,'String'));
         if interval~=0  
             NumSaveFrames=ceil(((endTime(1,1)*60+endTime(1,2))-(startTime(1,1)*60+startTime(1,2)))/interval);
@@ -691,7 +734,10 @@ loudstatuse=0;
     end
     function editStime2_Callback(src,event)
         global startTime endTime
+        endTime(1,2)=str2double(get(heditEtime2,'String'));
+        endTime(1,1)=str2double(get(heditEtime1,'String'));
         startTime(1,2)=str2double(get(heditStime2,'String'));
+        startTime(1,1)=str2double(get(heditStime1,'String'));
         if interval~=0 
             NumSaveFrames=ceil(((endTime(1,1)*60+endTime(1,2))-(startTime(1,1)*60+startTime(1,2)))/interval);
             set(heditNframes,'String',NumSaveFrames);
@@ -699,7 +745,10 @@ loudstatuse=0;
     end
     function editEtime1_Callback(src,event)
         global startTime endTime
+        endTime(1,2)=str2double(get(heditEtime2,'String'));
         endTime(1,1)=str2double(get(heditEtime1,'String'));
+        startTime(1,2)=str2double(get(heditStime2,'String'));
+        startTime(1,1)=str2double(get(heditStime1,'String'));
         if interval~=0  
             NumSaveFrames=ceil(((endTime(1,1)*60+endTime(1,2))-(startTime(1,1)*60+startTime(1,2)))/interval);
             set(heditNframes,'String',NumSaveFrames);
@@ -708,6 +757,9 @@ loudstatuse=0;
     function editEtime2_Callback(src,event)
         global startTime endTime
         endTime(1,2)=str2double(get(heditEtime2,'String'));
+        endTime(1,1)=str2double(get(heditEtime1,'String'));
+        startTime(1,2)=str2double(get(heditStime2,'String'));
+        startTime(1,1)=str2double(get(heditStime1,'String'));
         if interval~=0  
             NumSaveFrames=ceil(((endTime(1,1)*60+endTime(1,2))-(startTime(1,1)*60+startTime(1,2)))/interval);
             set(heditNframes,'String',NumSaveFrames);
