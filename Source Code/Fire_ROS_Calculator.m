@@ -23,7 +23,7 @@
 function Fire_ROS_Calculator
 global Xcorners Ycorners pathname calibrationFile numframes framefiles bwporig TimeSelection shape localtime results resultrow resultsfolder frames appPath checkimage videoObject
 global drawfront project_name cornersnum MainF images squareSize imagesUsed workpathname work loudstatuse AngleWorld Lworld CLworld cameraParams calibList hwait man_mod interval errors
-global XcornersWorld YcornersWorld ffpoints fflineeq time R t Xworld Yworld X Y Nfires fireLastFrame calibMode
+global XcornersWorld YcornersWorld ffpoints fflineeq time R t Xworld Yworld X Y fireLastFrame calibMode
 %% read files 
 if isdeployed && ispc
     [~, result] = system('path');
@@ -160,6 +160,9 @@ htextSave  = uicontrol(hpanelRes,'Style','text','String','Saved!',...
 % Second tab (Load Project)
 % Inputs panel (left)
 hpanelLoad=uipanel(htabLoad,'Units','pixels','Title','Load Project','FontSize',10,'Position',[0,0,450,615]);
+htextPname2  = uicontrol(hpanelLoad,'Style','text','String','Session Name:',...
+    'FontSize',11,'FontWeight','bold','Position',[80,550,115,25]);
+heditPname2  = uicontrol(hpanelLoad,'Style','edit','Position',[198,550,180,25],'FontSize',10,'FontWeight','bold','callback',{@heditPname2_Callback});
 htextLprojcet  = uicontrol(hpanelLoad,'Style','text','String','     Select Session:',...
     'FontSize',11,'FontWeight','bold','Position',[13,500,140,24]);
 heditLprojcet = uicontrol(hpanelLoad,'Style','edit','Position',[155,500,180,25],'FontSize',10);
@@ -173,8 +176,10 @@ hbuttonAresults  = uicontrol(hpanelLoad,'Style','pushbutton','String','Select Fo
 %results panel (right)
 hpanelResult=uipanel(htabLoad,'Units','pixels','Title','Results','FontSize',10,'Position',[450,0,350,615]);
 htextCFI2  = uicontrol(hpanelResult,'Style','text','String','Total No. of Frames:',...
-    'FontSize',10,'Position',[25,510,170,20]);
-heditCFI2  = uicontrol(hpanelResult,'Style','edit','Position',[175,510,100,23],'FontSize',10,'FontWeight','bold','Enable','off');
+    'FontSize',10,'Position',[30,535,130,20]);
+heditCFI2  = uicontrol(hpanelResult,'Style','edit','Position',[170,535,150,23],'FontSize',10,'FontWeight','bold','Enable','off');
+hframeEva2  = uicontrol(hpanelResult,'Style','pushbutton','String','Evaluate Fire Fronts Detection','FontSize',10,...
+    'FontWeight','bold','Position',[40,495,270,30],'callback',{@buttonFrameEva2_Callback},'Enable','off');
 htextPresent  = uicontrol(hpanelResult,'Style','text','String','Results:',...
     'FontSize',11,'FontWeight','bold','Position',[50,450,120,23]);
 hbuttonAROS2  = uicontrol(hpanelResult,'Style','pushbutton','String','Calculate Average ROS','FontSize',10,...
@@ -490,7 +495,7 @@ pathname=convertCharsToStrings(appPath);
         end
     end
     function buttonCalibrateA_Callback(src,event)
-        global cancelProc detSens
+        global cancelProc detSens Nfires
         resultrow=5;results=cell(0);
         if size(imread(framefiles{1}))==size(bwporig)
             man_mod=0;
@@ -521,6 +526,8 @@ pathname=convertCharsToStrings(appPath);
 
 %% interactive controls for the results panel (New session Tab)
     function buttonFrameEva_Callback(src,event)
+        global loadsession
+        loadsession=0;
         evaluate_frames 
     end
     function buttonAROS_Callback(src,event)
@@ -568,21 +575,53 @@ pathname=convertCharsToStrings(appPath);
     end
 
 %% interactive controls for the load panel (load project Tab)
-    function buttonLprojcet_Callback(src,event)  
+    function heditPname2_Callback(src,event) 
+        project_name=get(heditPname2,'String');
+    end
+    function buttonLprojcet_Callback(src,event)
+        global Nfires
         [work, workpathname] = uigetfile('*.mat','Load a Session',pathname);
         loudstatuse=1;
         set(heditLprojcet,'String',work);
+        if exist('Nfires','var')
+            clear Nfires;
+        end
         load([workpathname,work])
-        %load([workpathname,work],'numframes')
+        if ~exist('Nfires','var')
+            Nfires=1;
+            fireLastFrame=numframes;
+        end
         set(heditCFI2,'String',num2str(numframes));
     end
     function buttonSelect2_Callback(src,event)
         resultsfolder = uigetdir(workpathname,'Select a Folder To Save the Results On');
         set(heditAresults,'String',resultsfolder);
         hbuttonAROS2.Enable='on'; hbuttonDROS2.Enable='on'; hbuttonDist2.Enable='on'; hbuttonMap2.Enable='on';
-        hbuttonIso2.Enable='on'; hbuttonCheck2.Enable='on'; hbuttonSaveE2.Enable='on';
+        hbuttonCheck2.Enable='on'; hbuttonSaveE2.Enable='on'; hframeEva2.Enable='on';
     end
-
+    function buttonFrameEva2_Callback(src,event)
+        global frame loadsession BI MaskROI Nfires
+        [frames, pathname] = uigetfile({'*.jpg;*.tif;*.png;*.gif','All Image Files';...
+            '*.*','All Files' },sprintf('Select the Same %d Frames',numframes),'MultiSelect', 'on',pathname);
+        framefiles=fullfile(pathname,frames);
+        frame= cell(1,numframes);
+        for i=1:numframes
+            frame{i} = imread(framefiles{i});
+        end
+        loadsession=1;
+        BI=cell(1,numframes);
+        fireLastFrame(1,1:Nfires)=numframes;
+        NumRow=size(frame{1},1);
+        NumCol=size(frame{1},2);
+        for j=1:Nfires
+            for i=1:fireLastFrame(1,j)
+                BI{i} = poly2mask(X{j,i},Y{j,i},NumRow,NumCol);
+                %figure; imshow(BI{i});
+            end
+        end
+        MaskROI = roipoly(BI{1},Xcorners(1:(end-1),1),Ycorners(1:(end-1),1)); % determine the region of interes
+        evaluate_frames
+    end
 %% interactive controls for the Matching Images Tab
     function popModeMat_Callback(src,event)
         global MatchMode MatchFile

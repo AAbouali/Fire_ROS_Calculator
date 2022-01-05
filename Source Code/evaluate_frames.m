@@ -22,8 +22,8 @@
 %    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 function evaluate_frames
-global numframes cornersnum Xworld Yworld appPath BI MaskROI Bnd hL editMode hArea project_name resultsfolder
-global R t cameraParams X Y Xcorners Ycorners frames frame Fselection fflineeq drawfront MainF Nfires fireLastFrame
+global numframes cornersnum Xworld Yworld appPath BI MaskROI Bnd hL editMode hArea project_name resultsfolder XcornersWorld YcornersWorld ffpoints time
+global R t cameraParams X Y Xcorners Ycorners frames frame Fselection fflineeq drawfront MainF Nfires fireLastFrame shape results resultrow loadsession
 %% building the GUI
 f = figure('Visible','off','Position',[680,215,800,500],'CloseRequestFcn',@f_CloseRequestFcn);
 panel=uipanel(f,'Position',[0,0,1,1]);
@@ -70,6 +70,10 @@ editMode=1; allFrames=0; fireToEditNo=1;
     function popFrame_Callback(src,event)
         global him handles
         Fselection=get(hpopFrame,'Value');
+        axesHandlesToChildObjects = findobj(haxis, 'Type', 'image');
+        if ~isempty(axesHandlesToChildObjects)
+            delete(axesHandlesToChildObjects);
+        end
         him=image(haxis,frame{Fselection});
         haxis.Box='off';haxis.XTick=[];haxis.YTick=[];haxis.ZTick=[];haxis.XColor=[1 1 1];haxis.YColor=[1 1 1];
         hold on
@@ -92,7 +96,7 @@ editMode=1; allFrames=0; fireToEditNo=1;
     end
     function MTool_Callback(src,event)
         %C = imfuse(frame{Fselection},BI{Fselection}); image(haxis,C);
-        hArea = imfreehand(haxis);
+         hArea = imfreehand(haxis);
         hradioAdd.Enable='on'; hradioRemove.Enable='on';
     end
     function selectionMode(src,event)
@@ -113,7 +117,7 @@ editMode=1; allFrames=0; fireToEditNo=1;
         set(f, 'pointer', 'watch'); drawnow;
         Mask = createMask(hArea,him);
         if Fselection > fireLastFrame(1,fireToEditNo)
-            fireLastFrame(1,fireToEditNo)=Fselection
+            fireLastFrame(1,fireToEditNo)=Fselection;
         end
         if editMode==1
             BI{Fselection}(Mask == 1) = 1;
@@ -179,6 +183,7 @@ editMode=1; allFrames=0; fireToEditNo=1;
         end
         delete(handles.hL{fireToEditNo})
         handles.hL{fireToEditNo}=line(X{fireToEditNo,Fselection},Y{fireToEditNo,Fselection},'Color','g','LineWidth',1.2);
+        delete(hArea);
         set(f, 'pointer', 'arrow'); drawnow;
     end
 % To save the updated locations of the fire fronts on the saved session
@@ -188,15 +193,26 @@ editMode=1; allFrames=0; fireToEditNo=1;
         set(MainF, 'pointer', 'watch'); drawnow;
         delete(f)
         if edit==1
-            save([resultsfolder,'\',project_name], 'fflineeq', 'Xworld', 'Yworld', 'X', 'Y','-append')
+            if loadsession==1
+                namedrawfront=[project_name ' DFF'];folder=fullfile(resultsfolder,namedrawfront);
+                if exist(folder)==0
+                    mkdir(folder)
+                end
+                save([resultsfolder,'\',project_name],'XcornersWorld', 'YcornersWorld', 'ffpoints', 'fflineeq', 'time', 'R', 't', 'cameraParams', 'Xworld', 'Yworld', 'X', 'Y',...
+                    'numframes', 'Xcorners', 'Ycorners', 'shape', 'cornersnum', 'Nfires', 'fireLastFrame', 'drawfront', 'results', 'resultrow' )
+            else
+                save([resultsfolder,'\',project_name], 'fflineeq', 'Xworld', 'Yworld', 'X', 'Y','-append')
+            end
             if drawfront==1
                 fff = figure('visible','off'); haxesff=axes(fff);
                 for i=1:numframes
                     image(haxesff,frame{i});
                     hold on
-                    for k=1:Nfires
-                        for j=1:fireLastFrame(1,k)
-                            line(haxesff,X{k,j}(:,1),Y{k,j}(:,1),'Color','g','LineWidth',1.2)
+                    for j=1:i
+                        for k=1:Nfires
+                            if j<=fireLastFrame(1,k)
+                                line(haxesff,X{k,j}(:,1),Y{k,j}(:,1),'Color','g','LineWidth',1.2)
+                            end
                         end
                     end
                     for j=1:cornersnum
